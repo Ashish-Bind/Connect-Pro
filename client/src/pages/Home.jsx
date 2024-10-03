@@ -1,7 +1,11 @@
-import AppLayout from "../layout/AppLayout"
+import React from "react"
+import AppLayout from "../components/layout/AppLayout"
 
 const Home = () => {
-  return <h1>Home</h1>
+  return <p>Home</p>
 }
 
-export default AppLayout()(Home)
+const WrappedHome = React.memo(AppLayout()(Home), () => true)
+WrappedHome.displayName = 'WrappedHome' // add a display name
+
+export default WrappedHome
