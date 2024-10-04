@@ -14,7 +14,6 @@ const ChatItem = ({
   index = 0,
   handleDeleteChat,
 }) => {
-  console.log(isOnline,newMessageAlert)
   return (
     <Link
       to={`/chat/${_id}`}
@@ -27,24 +26,24 @@ const ChatItem = ({
         style={{
           display: 'flex',
           alignItems: 'center',
-          padding: '0.5rem',
+          padding: '1rem',
           gap: '1rem',
           position: 'relative',
           backgroundColor: sameSender ? 'rgba(0, 0, 0, 0.2)' : 'unset',
-          color: sameSender ? 'white' : 'unset',
+          color: sameSender ? 'black' : 'unset',
         }}
       >
         {avatar && (
           <Avatar
             src={avatar}
             sx={{
-              width: '2.5rem',
-              height: '2.5rem',
+              width: '3rem',
+              height: '3rem',
             }}
           />
         )}
         <Stack>
-          <Typography>{name}</Typography>
+          <Typography sx={{ fontFamily: 'Open Sans' }}>{name}</Typography>
 
           {newMessageAlert && newMessageAlert.count > 0 && (
             <Typography
