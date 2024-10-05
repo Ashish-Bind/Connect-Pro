@@ -1,5 +1,6 @@
 import { Add as AddIcon, Remove as DeleteIcon } from '@mui/icons-material'
 import { Avatar, IconButton, ListItem, Stack, Typography } from '@mui/material'
+import { primary, primaryDark } from '../constants/color'
 import React from 'react'
 
 const UserItem = ({ user, handler, handlerIsLoading, isAdded = false }) => {
@@ -35,10 +36,10 @@ const UserItem = ({ user, handler, handlerIsLoading, isAdded = false }) => {
           disabled={handlerIsLoading}
           size="small"
           sx={{
-            bgcolor: isAdded ? 'error.main' : 'primary.main',
+            bgcolor: isAdded ? 'error.main' : primary,
             color: 'white',
             '&:hover': {
-              bgcolor: isAdded ? 'error.dark' : 'primary.dark',
+              bgcolor: isAdded ? 'error.dark' : primaryDark,
             },
           }}
         >

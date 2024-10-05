@@ -18,19 +18,21 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
-import React, { Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import ConfirmDialog from '../dialogs/ConfirmDialog'
 
-const SearchDialog = React.lazy(() => import('../Search'))
-const NotificationsDialog = React.lazy(() => import('../Notifications'))
-const NewGroupDialog = React.lazy(() => import('../NewGroup'))
+const SearchDialog = lazy(() => import('../Search'))
+const NotificationsDialog = lazy(() => import('../Notifications'))
+const NewGroupDialog = lazy(() => import('../NewGroup'))
 
 const Header = () => {
   const navigate = useNavigate()
 
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false)
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false)
-  const [isNewGroupOpen, setIsNewGroupOpen] = React.useState(false)
-  const [isNotificationOpen, setIsNotificationOpen] = React.useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false)
 
   const handleMobile = () => {
     setIsMobileOpen(!isMobileOpen)
@@ -53,6 +55,7 @@ const Header = () => {
   }
 
   const handleLogout = () => {
+    setIsLogoutOpen(true)
     console.log('handleLogout')
   }
 
@@ -62,8 +65,11 @@ const Header = () => {
         <AppBar position="static" sx={{ bgcolor: primary }}>
           <Toolbar>
             <Typography
-              variant="h6"
-              sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+              variant="h5"
+              sx={{
+                flexGrow: 1,
+                display: { xs: 'none', sm: 'block', fontWeight: 'bold' },
+              }}
             >
               ConnectPro.
             </Typography>
@@ -126,6 +132,13 @@ const Header = () => {
           <NotificationsDialog />
         </Suspense>
       )}
+
+      <ConfirmDialog
+        open={isLogoutOpen}
+        handleClose={() => setIsLogoutOpen(false)}
+        title="Logout"
+        description="Are you sure you want to logout?"
+      />
     </>
   )
 }

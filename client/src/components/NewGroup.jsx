@@ -10,13 +10,14 @@ import { Clear as ClearIcon, Done as DoneIcon } from '@mui/icons-material'
 import { users as sampleUsers } from '../constants/data'
 import UserItem from './UserItem'
 import { useInputValidation } from '6pp'
-import React from 'react'
+import { useState } from 'react'
+import { primary, primaryDark } from '../constants/color'
 
 const NewGroup = () => {
   const groupName = useInputValidation('')
 
-  const [members, setMembers] = React.useState(sampleUsers)
-  const [selectedMembers, setSelectedMembers] = React.useState([])
+  const [members, setMembers] = useState(sampleUsers)
+  const [selectedMembers, setSelectedMembers] = useState([])
 
   const selectGroupMember = (id) => {
     setSelectedMembers((prev) => {
@@ -62,11 +63,30 @@ const NewGroup = () => {
         </Stack>
 
         <Stack direction={'row'} justifyContent={'space-evenly'}>
-          <Button onClick={() => submitHandler()} size="large">
-            <DoneIcon color="success" />
+          <Button
+            onClick={() => submitHandler()}
+            size="large"
+            startIcon={<DoneIcon />}
+            variant="outlined"
+            sx={{
+              borderColor: primary,
+              color: primary,
+              '&:hover': {
+                borderColor: primaryDark,
+                color: primaryDark,
+              },
+            }}
+          >
+            Create Group
           </Button>
-          <Button onClick={() => closeHandler()} size="large">
-            <ClearIcon color="error" />
+          <Button
+            onClick={() => closeHandler()}
+            size="large"
+            startIcon={<ClearIcon />}
+            variant="outlined"
+            color="error"
+          >
+            Cancel
           </Button>
         </Stack>
       </Stack>

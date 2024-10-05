@@ -10,8 +10,9 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <HelmetProvider>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
+        <CssBaseline>
+          <App />
+        </CssBaseline>
       </ThemeProvider>
     </HelmetProvider>
   </StrictMode>
