@@ -6,6 +6,7 @@ import userRoute from './routes/userRoute.js'
 import chatRoute from './routes/chatRoute.js'
 import { connectToDB } from './utils/features.js'
 import { errorHandler } from './middlewares/error.js'
+import { createUser } from './utils/seeders.js'
 
 dotenv.config({
   path: './.env',

@@ -1,4 +1,4 @@
-import { Schema, model, models } from 'mongoose'
+import mongoose, { Schema, model, Types } from 'mongoose'
 
 const chatSchema = new Schema(
   {
@@ -20,10 +20,20 @@ const chatSchema = new Schema(
         ref: 'User',
       },
     ],
+    groupAvatar: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+    },
   },
   {
     timestamps: true,
   }
 )
 
-const Chat = models.Chat || model('Chat', chatSchema)
+export const Chat = mongoose.models.Chat || model('Chat', chatSchema)

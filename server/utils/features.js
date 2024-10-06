@@ -30,3 +30,7 @@ export const setCookieToken = ({ res, user, message, statusCode }) => {
 export const eventEmitter = (req, event, users, data) => {
   console.log('event emitter')
 }
+
+export const getOtherMember = ({ members, userId }) => {
+  return members.filter((member) => member.toString() !== userId.toString())
+}
