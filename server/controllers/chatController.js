@@ -9,12 +9,13 @@ import { Chat } from '../models/chatModel.js'
 import { Message } from '../models/messageModel.js'
 import { User } from '../models/userModel.js'
 import {
+  deletFilesFromCloudinary,
   eventEmitter,
   getOtherMember,
   setCookieToken,
 } from '../utils/features.js'
 
-const newGroupChat = trycatch(async (req, res, next) => {
+export const newGroupChat = trycatch(async (req, res, next) => {
   const { name, members, groupAvatar } = req.body
 
   //Todo: Add group avatar
@@ -42,7 +43,7 @@ const newGroupChat = trycatch(async (req, res, next) => {
   })
 })
 
-const getUserChats = trycatch(async (req, res, next) => {
+export const getUserChats = trycatch(async (req, res, next) => {
   const chats = await Chat.find({
     members: {
       $in: [req.user._id],
@@ -77,7 +78,7 @@ const getUserChats = trycatch(async (req, res, next) => {
   })
 })
 
-const getUserGroupChats = trycatch(async (req, res, next) => {
+export const getUserGroupChats = trycatch(async (req, res, next) => {
   const chats = await Chat.find({
     members: {
       $in: [req.user._id],
@@ -103,7 +104,7 @@ const getUserGroupChats = trycatch(async (req, res, next) => {
   })
 })
 
-const addNewMembers = trycatch(async (req, res, next) => {
+export const addNewMembers = trycatch(async (req, res, next) => {
   const { chatId, members } = req.body
 
   const chat = await Chat.findById(chatId)
@@ -146,7 +147,7 @@ const addNewMembers = trycatch(async (req, res, next) => {
   })
 })
 
-const removeMembers = trycatch(async (req, res, next) => {
+export const removeMembers = trycatch(async (req, res, next) => {
   const { userId, chatId } = req.body
 
   const [chat, userThatWillBeRemoved] = await Promise.all([
@@ -184,7 +185,7 @@ const removeMembers = trycatch(async (req, res, next) => {
   })
 })
 
-const leaveGroup = trycatch(async (req, res, next) => {
+export const leaveGroup = trycatch(async (req, res, next) => {
   const chatId = req.params.id
 
   const chat = await Chat.findById(chatId)
@@ -229,7 +230,7 @@ const leaveGroup = trycatch(async (req, res, next) => {
   })
 })
 
-const sendAttachments = trycatch(async (req, res, next) => {
+export const sendAttachments = trycatch(async (req, res, next) => {
   const { chatId } = req.body
 
   const [chat, user] = await Promise.all([
@@ -275,7 +276,7 @@ const sendAttachments = trycatch(async (req, res, next) => {
   })
 })
 
-const getChatDetails = trycatch(async (req, res, next) => {
+export const getChatDetails = trycatch(async (req, res, next) => {
   if (req.query.populate === 'true') {
     const chat = await Chat.findById(req.params.id)
       .populate('members', 'name avatar')
@@ -304,7 +305,7 @@ const getChatDetails = trycatch(async (req, res, next) => {
   }
 })
 
-const renameGroup = trycatch(async (req, res, next) => {
+export const renameGroup = trycatch(async (req, res, next) => {
   const chatId = req.params.id
   const { name } = req.body
 
@@ -332,14 +333,73 @@ const renameGroup = trycatch(async (req, res, next) => {
   })
 })
 
-export {
-  newGroupChat,
-  getUserChats,
-  getUserGroupChats,
-  addNewMembers,
-  removeMembers,
-  leaveGroup,
-  sendAttachments,
-  getChatDetails,
-  renameGroup,
-}
+export const deleteChat = trycatch(async (req, res, next) => {
+  const chatId = req.params.id
+
+  const chat = await Chat.findById(chatId)
+
+  if (!chat) return next(new ErrorHandler('Chat not found', 404))
+
+  const members = chat.members
+
+  if (chat.groupChat && chat.creator.toString() !== req.user._id.toString())
+    return next(
+      new ErrorHandler('You are not allowed to delete the group', 403)
+    )
+
+  if (!chat.groupChat && !chat.members.includes(req.user._id.toString())) {
+    return next(new ErrorHandler('You are not allowed to delete the chat', 403))
+  }
+
+  const messagesWithAttachments = await Message.find({
+    chat: chatId,
+    attachments: { $exists: true, $ne: [] },
+  })
+
+  const public_ids = []
+
+  messagesWithAttachments.forEach(({ attachments }) =>
+    attachments.forEach(({ public_id }) => public_ids.push(public_id))
+  )
+
+  await Promise.all([
+    deletFilesFromCloudinary(public_ids),
+    chat.deleteOne(),
+    Message.deleteMany({ chat: chatId }),
+  ])
+
+  eventEmitter(req, REFETCH_CHATS, members)
+
+  return res.status(200).json({
+    success: true,
+    message: 'Chat deleted successfully',
+  })
+})
+
+export const getMessages = trycatch(async (req, res, next) => {
+  const chatId = req.params.id
+  const { page = 1 } = req.query
+
+  const limit = 20
+
+  const skip = (page - 1) * limit
+
+  const [messages, messageCount] = await Promise.all([
+    Message.find({ chat: chatId })
+      .sort({ createdAt: -1 })
+      .populate('sender', 'name avatar')
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Message.countDocuments({ chat: chatId }),
+  ])
+
+  const totalPages = Math.ceil(messageCount / limit)
+
+  return res.status(200).json({
+    success: true,
+    messages,
+    count: messageCount,
+    totalPages,
+  })
+})

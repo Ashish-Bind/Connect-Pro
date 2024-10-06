@@ -34,3 +34,9 @@ export const eventEmitter = (req, event, users, data) => {
 export const getOtherMember = ({ members, userId }) => {
   return members.filter((member) => member.toString() !== userId.toString())
 }
+
+export const deletFilesFromCloudinary = (public_ids) => {
+  // public_ids.forEach((public_id) => {
+  //   cloudinary.v2.uploader.destroy(public_id)
+  // })
+}
