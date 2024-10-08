@@ -4,7 +4,7 @@ import { Link } from './styles/StyledComponent'
 import React from 'react'
 
 const ChatItem = ({
-  avatar = [],
+  avatar,
   name,
   _id,
   groupChat = false,
@@ -33,15 +33,13 @@ const ChatItem = ({
           color: sameSender ? 'black' : 'unset',
         }}
       >
-        {avatar && (
-          <Avatar
-            src={avatar}
-            sx={{
-              width: '3rem',
-              height: '3rem',
-            }}
-          />
-        )}
+        <Avatar
+          src={avatar ? avatar : ''}
+          sx={{
+            width: '3rem',
+            height: '3rem',
+          }}
+        />
         <Stack>
           <Typography sx={{ fontFamily: 'Open Sans' }}>{name}</Typography>
 

@@ -20,19 +20,19 @@ export const chats = [
   {
     _id: 3,
     name: 'Affan Khan',
-    avatar: [],
+    avatar: '',
     lastMessage: 'Hello, how are you?',
   },
   {
     _id: 4,
     name: 'Om Behra',
-    avatar: [],
+    avatar: '',
     groupChat: false,
   },
   {
     _id: 5,
     name: 'Kumar',
-    avatar: [],
+    avatar: '',
     members: [1, 2],
   },
 ]

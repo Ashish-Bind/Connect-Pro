@@ -20,22 +20,28 @@ import { useNavigate } from 'react-router-dom'
 
 import { lazy, Suspense, useState } from 'react'
 import ConfirmDialog from '../dialogs/ConfirmDialog'
+import toast from 'react-hot-toast'
+import axios from 'axios'
+import { userNotExists } from '../../redux/reducer/auth'
+import { useDispatch } from 'react-redux'
+import { SERVER } from '../../constants/config'
+import { setIsMobile } from '../../redux/reducer/misc'
 
 const SearchDialog = lazy(() => import('../Search'))
 const NotificationsDialog = lazy(() => import('../Notifications'))
 const NewGroupDialog = lazy(() => import('../NewGroup'))
 
 const Header = () => {
+  const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
 
-  const handleMobile = () => {
-    setIsMobileOpen(!isMobileOpen)
+  const handleMobileOpen = () => {
+    dispatch(setIsMobile(true))
   }
 
   const handleSearch = () => {
@@ -59,6 +65,19 @@ const Header = () => {
     console.log('handleLogout')
   }
 
+  const logoutHandler = () => {
+    axios
+      .post(`${SERVER}/api/v1/user/logout`, {}, { withCredentials: true })
+      .then((response) => {
+        const { data } = response
+        dispatch(userNotExists())
+        toast.success(data.message)
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message || 'Something went wrong')
+      })
+  }
+
   return (
     <>
       <Box sx={{ flexGrow: 1 }} height={'4rem'}>
@@ -75,7 +94,7 @@ const Header = () => {
             </Typography>
 
             <Box sx={{ flexGrow: 1, display: { xs: 'block', sm: 'none' } }}>
-              <IconButton color="inherit" onClick={handleMobile}>
+              <IconButton color="inherit" onClick={handleMobileOpen}>
                 <MenuIcon />
               </IconButton>
             </Box>
@@ -136,6 +155,7 @@ const Header = () => {
       <ConfirmDialog
         open={isLogoutOpen}
         handleClose={() => setIsLogoutOpen(false)}
+        deleteHandler={logoutHandler}
         title="Logout"
         description="Are you sure you want to logout?"
       />

@@ -14,8 +14,15 @@ import { CameraAlt } from '@mui/icons-material'
 import { useFileHandler, useInputValidation, useStrongPassword } from '6pp'
 import { usernameValidator } from '../utils/validators'
 import { secondary } from '../constants/color'
+import axios from 'axios'
+import { SERVER } from '../constants/config'
+import { useDispatch } from 'react-redux'
+import { userExists } from '../redux/reducer/auth'
+import toast from 'react-hot-toast'
 
 const Login = () => {
+  const dispatch = useDispatch()
+
   const [isLogin, setIsLogin] = React.useState(true)
 
   const toggleLogin = () => {
@@ -29,14 +36,63 @@ const Login = () => {
 
   const avatar = useFileHandler('single')
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    console.log(username.value, password.value)
+
+    const options = {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+
+    console.log(SERVER)
+
+    try {
+      const { data } = await axios.post(
+        `${SERVER}/api/v1/user/login`,
+        {
+          username: username.value,
+          password: password.value,
+        },
+        options
+      )
+
+      dispatch(userExists(true))
+      toast.success(data.message)
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Something went wrong')
+    }
   }
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
-    console.log(username.value, password.value)
+    const options = {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+
+    const formdata = new FormData()
+
+    formdata.append('name', name.value)
+    formdata.append('bio', bio.value)
+    formdata.append('username', username.value)
+    formdata.append('password', password.value)
+    formdata.append('avatar', avatar.file)
+
+    try {
+      const { data } = await axios.post(
+        `${SERVER}/api/v1/user/new`,
+        formdata,
+        options
+      )
+      toast.success(data.message)
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Something went wrong')
+      console.log(error)
+    }
   }
 
   return (
@@ -105,6 +161,7 @@ const Login = () => {
                   margin="normal"
                   color="primary"
                   sx={{ marginTop: 2 }}
+                  type="submit"
                 >
                   Login
                 </Button>
@@ -225,6 +282,7 @@ const Login = () => {
                   margin="normal"
                   color="primary"
                   sx={{ marginTop: 2 }}
+                  type="submit"
                 >
                   Sign up
                 </Button>

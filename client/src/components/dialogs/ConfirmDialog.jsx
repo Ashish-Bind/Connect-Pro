@@ -22,7 +22,7 @@ const ConfirmDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={deleteHandler} variant="outlined" color="error">
-          Delete
+          {title || 'Delete'}
         </Button>
         <Button
           variant="outlined"
