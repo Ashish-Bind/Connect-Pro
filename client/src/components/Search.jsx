@@ -1,32 +1,61 @@
+import { useInputValidation } from '6pp'
+import { Search as SearchIcon } from '@mui/icons-material'
 import {
   Dialog,
   DialogTitle,
   InputAdornment,
   List,
-  ListItem,
-  ListItemText,
   Stack,
   TextField,
 } from '@mui/material'
-import { useInputValidation } from '6pp'
-import { Search as SearchIcon } from '@mui/icons-material'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  useLazySearchUserQuery,
+  useSendRequestMutation,
+} from '../redux/query/api'
+import { setIsSearch } from '../redux/reducer/misc'
 import UserItem from './UserItem'
-import React from 'react'
-import { users as sampleUsers } from '../constants/data'
+import toast from 'react-hot-toast'
+import { useAsyncMutation } from '../hooks/customHooks'
 
 const Search = () => {
   const searchQuery = useInputValidation('')
-  const [users, setUsers] = React.useState(sampleUsers)
+  const dispatch = useDispatch()
 
-  const addFriendHandler = (id) => {
-    console.log('add friend', id)
+  const { isSearch } = useSelector((state) => state.misc)
+  const [searchUser] = useLazySearchUserQuery()
+  const [sendRequest, isLoadingRequest] = useAsyncMutation(
+    useSendRequestMutation
+  )
+
+  const [users, setUsers] = React.useState([])
+
+  const addFriendHandler = async (id) => {
+    await sendRequest('Sending friend request', { userId: id })
   }
+
+  const closeSearch = () => {
+    dispatch(setIsSearch(false))
+  }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      searchUser(searchQuery.value)
+        .then(({ data }) => setUsers(data.users))
+        .catch((err) => console.log(err))
+    }, 1000)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [searchQuery.value])
 
   const isLoadingFriendRequest = false
 
   return (
-    <Dialog open>
-      <Stack p={'2rem'} direction={'column'} width={'30rem'}>
+    <Dialog open={isSearch} onClose={closeSearch}>
+      <Stack p={'2rem'} direction={'column'} width={'25rem'}>
         <DialogTitle textAlign={'center'}>Find People</DialogTitle>
         <TextField
           label=""
@@ -46,7 +75,7 @@ const Search = () => {
         />
       </Stack>
 
-      <List>
+      <List sx={{ overflow: 'auto', height: '100%' }}>
         {users.map((user) => (
           <UserItem
             key={user._id}

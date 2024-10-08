@@ -4,7 +4,7 @@ import { primary, primaryDark } from '../constants/color'
 import React from 'react'
 
 const UserItem = ({ user, handler, handlerIsLoading, isAdded = false }) => {
-  const { username: name, _id, avatar } = user
+  const { username, name, _id, avatar } = user
 
   return (
     <ListItem>
@@ -14,22 +14,27 @@ const UserItem = ({ user, handler, handlerIsLoading, isAdded = false }) => {
         spacing={'1rem'}
         width={'100%'}
       >
-        <Avatar src={avatar} />
-
-        <Typography
-          variant="body1"
-          sx={{
-            flexGrow: 1,
-            display: '-webkit-box',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            WebkitBoxOrient: 'vertical',
-            WebkitLineClamp: 1,
-            width: '100%',
-          }}
-        >
-          {name}
-        </Typography>
+        {avatar ? <Avatar src={avatar} /> : <Avatar />}
+        <Stack direction={'column'} width={'100%'}>
+          <Typography
+            variant="body1"
+            sx={{
+              flexGrow: 1,
+              display: '-webkit-box',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 1,
+              width: '100%',
+              flexDirection: 'column',
+              fontWeight: 'bold',
+            }}
+            color={primary}
+          >
+            {name}
+          </Typography>
+          <Typography variant="caption">@{username}</Typography>
+        </Stack>
 
         <IconButton
           onClick={() => handler(_id)}

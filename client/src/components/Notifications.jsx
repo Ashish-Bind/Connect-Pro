@@ -12,8 +12,11 @@ import {
 import React from 'react'
 import { notifications as sampleNotifications } from '../constants/data'
 import { secondary } from '../constants/color'
+import { useGetNotificationsQuery } from '../redux/query/api'
 
 const Notifications = () => {
+  const { data } = useGetNotificationsQuery('')
+
   const friendRequestHandler = ({ _id, accept }) => {}
 
   return (

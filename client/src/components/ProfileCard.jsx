@@ -7,8 +7,13 @@ import {
 } from '@mui/icons-material'
 import { Avatar, Stack, Typography } from '@mui/material'
 import moment from 'moment'
+import { useSelector } from 'react-redux'
 
 const Profile = () => {
+  const { user } = useSelector((state) => state.auth)
+
+  console.log(user)
+
   return (
     <Stack
       spacing={'2rem'}
@@ -24,14 +29,19 @@ const Profile = () => {
           border: '2px solid black',
           marginBottom: '1rem',
         }}
+        src={user.avatar.url}
       />
-      <ProfileCard text={'Bio'} Icon={<CameraAlt />} heading={'Trust God'} />
-      <ProfileCard text={'Username'} Icon={<EmailIcon />} heading={'johndoe'} />
-      <ProfileCard text={'Name'} Icon={<FaceIcon />} heading={'John Doe'} />
+      <ProfileCard text={'Bio'} Icon={<CameraAlt />} heading={user.bio} />
+      <ProfileCard
+        text={'Username'}
+        Icon={<EmailIcon />}
+        heading={user.username}
+      />
+      <ProfileCard text={'Name'} Icon={<FaceIcon />} heading={user.name} />
       <ProfileCard
         text={'Joined'}
         Icon={<CalendarIcon />}
-        heading={moment('2024-03-06T18:30:00.000Z').fromNow()}
+        heading={moment(user.createdAt).fromNow()}
       />
     </Stack>
   )

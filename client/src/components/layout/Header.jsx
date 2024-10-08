@@ -1,4 +1,12 @@
 import {
+  Add as AddIcon,
+  Group as GroupIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+  Notifications as NotificationsIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material'
+import {
   AppBar,
   Backdrop,
   Box,
@@ -7,25 +15,17 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { primary } from '../../constants/color'
-import {
-  Add as AddIcon,
-  Menu as MenuIcon,
-  Notifications as NotificationsIcon,
-  Search as SearchIcon,
-  Group as GroupIcon,
-  Logout as LogoutIcon,
-} from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import { primary } from '../../constants/color'
 
-import { lazy, Suspense, useState } from 'react'
-import ConfirmDialog from '../dialogs/ConfirmDialog'
-import toast from 'react-hot-toast'
 import axios from 'axios'
-import { userNotExists } from '../../redux/reducer/auth'
-import { useDispatch } from 'react-redux'
+import { lazy, Suspense, useState } from 'react'
+import toast from 'react-hot-toast'
+import { useDispatch, useSelector } from 'react-redux'
 import { SERVER } from '../../constants/config'
-import { setIsMobile } from '../../redux/reducer/misc'
+import { userNotExists } from '../../redux/reducer/auth'
+import { setIsMobile, setIsSearch } from '../../redux/reducer/misc'
+import ConfirmDialog from '../dialogs/ConfirmDialog'
 
 const SearchDialog = lazy(() => import('../Search'))
 const NotificationsDialog = lazy(() => import('../Notifications'))
@@ -35,7 +35,8 @@ const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const { isMobile, isSearch } = useSelector((state) => state.misc)
+
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
@@ -45,7 +46,7 @@ const Header = () => {
   }
 
   const handleSearch = () => {
-    setIsSearchOpen(!isSearchOpen)
+    dispatch(setIsSearch(true))
   }
 
   const addGroup = () => {
@@ -134,7 +135,7 @@ const Header = () => {
         </AppBar>
       </Box>
 
-      {isSearchOpen && (
+      {isSearch && (
         <Suspense fallback={<Backdrop open />}>
           <SearchDialog />
         </Suspense>

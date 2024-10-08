@@ -11,6 +11,7 @@ import { secondary, tertiary } from '../../constants/color'
 import { useGetChatsQuery } from '../../redux/query/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { setIsMobile } from '../../redux/reducer/misc'
+import { useErrors } from '../../hooks/customHooks'
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
@@ -21,7 +22,7 @@ const AppLayout = () => (WrappedComponent) => {
 
     const { data, isError, isLoading, error, refetch } = useGetChatsQuery('')
 
-    console.log(data)
+    useErrors([{ isError, error }])
 
     const handleDeleteChat = (e, chatId, groupChat) => {
       e.preventDefault()

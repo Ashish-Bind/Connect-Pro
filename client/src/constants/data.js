@@ -53,17 +53,17 @@ export const users = [
   {
     _id: 3,
     username: 'Affan Khan',
-    avatar: [],
+    avatar: '',
   },
   {
     _id: 4,
     username: 'Om Behra',
-    avatar: [],
+    avatar: '',
   },
   {
     _id: 5,
     username: 'Kumar',
-    avatar: [],
+    avatar: '',
   },
 ]
 

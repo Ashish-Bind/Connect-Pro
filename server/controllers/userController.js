@@ -103,15 +103,17 @@ export const searchUser = trycatch(async (req, res, next) => {
 
   const allUsersExceptMeAndFriends = await User.find({
     _id: { $nin: allUsersFromMyChats },
-    name: { $regex: username, $options: 'i' },
     username: { $regex: username, $options: 'i' },
   })
 
-  const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
-    _id,
-    name,
-    avatar: avatar.url,
-  }))
+  const users = allUsersExceptMeAndFriends.map(
+    ({ _id, name, avatar, username }) => ({
+      _id,
+      name,
+      avatar: avatar.url,
+      username,
+    })
+  )
 
   return res.status(200).json({
     success: true,
