@@ -233,6 +233,12 @@ export const leaveGroup = trycatch(async (req, res, next) => {
 export const sendAttachments = trycatch(async (req, res, next) => {
   const { chatId } = req.body
 
+  const files = req.files || []
+
+  if (files.length < 1) {
+    return next(new ErrorHandler('Please select at least 1 file', 400))
+  }
+
   const [chat, user] = await Promise.all([
     Chat.findById(chatId),
     User.findById(req.user._id),
@@ -244,12 +250,6 @@ export const sendAttachments = trycatch(async (req, res, next) => {
 
   if (!chat.groupChat) {
     return next(new ErrorHandler('This is not a group chat', 400))
-  }
-
-  const files = req.files || []
-
-  if (files.length < 1) {
-    return next(new ErrorHandler('Please select at least 1 file', 400))
   }
 
   const attachments = []

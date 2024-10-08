@@ -17,6 +17,24 @@ export const chats = [
     groupChat: false,
     members: [1, 2],
   },
+  {
+    _id: 3,
+    name: 'Affan Khan',
+    avatar: [],
+    lastMessage: 'Hello, how are you?',
+  },
+  {
+    _id: 4,
+    name: 'Om Behra',
+    avatar: [],
+    groupChat: false,
+  },
+  {
+    _id: 5,
+    name: 'Kumar',
+    avatar: [],
+    members: [1, 2],
+  },
 ]
 
 export const users = [
@@ -31,6 +49,21 @@ export const users = [
     username: 'Jane Doe',
     avatar:
       'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+  },
+  {
+    _id: 3,
+    username: 'Affan Khan',
+    avatar: [],
+  },
+  {
+    _id: 4,
+    username: 'Om Behra',
+    avatar: [],
+  },
+  {
+    _id: 5,
+    username: 'Kumar',
+    avatar: [],
   },
 ]
 
@@ -110,7 +143,7 @@ export const dashboardData = {
   ],
   chats: [
     {
-      name: 'LabadBass Group',
+      name: 'New Group',
       avatar: ['https://www.w3schools.com/howto/img_avatar.png'],
       _id: '1',
       groupChat: false,
@@ -126,7 +159,7 @@ export const dashboardData = {
       },
     },
     {
-      name: 'L*Da Luston Group',
+      name: 'Group 1',
       avatar: ['https://www.w3schools.com/howto/img_avatar.png'],
       _id: '2',
       groupChat: true,
@@ -146,7 +179,7 @@ export const dashboardData = {
   messages: [
     {
       attachments: [],
-      content: 'L*uda ka Message hai',
+      content: 'Message hai',
       _id: 'sfnsdjkfsdnfkjsbnd',
       sender: {
         avatar: 'https://www.w3schools.com/howto/img_avatar.png',

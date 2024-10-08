@@ -1,4 +1,5 @@
 import { body, param, validationResult } from 'express-validator'
+import { ErrorHandler } from '../middlewares/error.js'
 
 export const registerValidator = () => [
   body('name', 'Please Enter Name').notEmpty(),
@@ -62,7 +63,7 @@ export const acceptRequestValidator = () => [
 ]
 
 export const adminLoginValidator = () => [
-  body('secretKey', 'Please Enter Secret Key').notEmpty(),
+  body('secret', 'Please Enter Secret Key').notEmpty(),
 ]
 
 export const validateHandler = (req, res, next) => {

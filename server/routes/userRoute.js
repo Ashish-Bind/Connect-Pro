@@ -7,7 +7,7 @@ import {
   newUser,
   searchUser,
   sendFriendRequest,
-} from '../controllers/useController.js'
+} from '../controllers/userController.js'
 import { upload } from '../middlewares/multer.js'
 import { isAuthenticated } from '../middlewares/auth.js'
 import {

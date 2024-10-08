@@ -1,13 +1,21 @@
 import { ErrorHandler, trycatch } from '../middlewares/error.js'
 import { User } from '../models/userModel.js'
 import { Chat } from '../models/chatModel.js'
-import { eventEmitter, setCookieToken } from '../utils/features.js'
+import {
+  eventEmitter,
+  getOtherMember,
+  setCookieToken,
+} from '../utils/features.js'
 import { Request } from '../models/requestModel.js'
 import bcrypt from 'bcryptjs'
 import { NEW_REQUEST, REFETCH_CHATS } from '../constants/events.js'
 
 export const newUser = trycatch(async (req, res, next) => {
   const { name, bio, username, password } = req.body
+
+  const file = req.file
+
+  if (!file) return next(new ErrorHandler('Please Upload Avatar'))
 
   const avatar = {
     public_id: 'test',
@@ -197,21 +205,39 @@ export const getAllNotifications = trycatch(async (req, res, next) => {
 })
 
 export const getAllFriends = trycatch(async (req, res, next) => {
-  const myChats = await Chat.find({
-    members: {
-      $in: [req.user._id],
-    },
+  const { chatId } = req.query
+
+  const chats = await Chat.find({
+    members: req.user._id,
     groupChat: false,
+  }).populate('members', 'name avatar')
+
+  const friends = chats.map(({ members }) => {
+    const otherUser = getOtherMember(members, req.user)
+
+    return {
+      _id: otherUser._id,
+      name: otherUser.name,
+      avatar: otherUser.avatar.url,
+    }
   })
 
-  const friends = myChats
-    .flatMap((chat) => chat.members)
-    .filter((member) => member.toString() !== req.user._id.toString())
+  if (chatId) {
+    const chat = await Chat.findById(chatId)
 
-  const allFriends = await User.find({ _id: { $in: friends } })
+    // get all members except me
+    const availableFriends = friends.filter(
+      (friend) => !chat.members.includes(friend._id)
+    )
 
-  return res.status(200).json({
-    success: true,
-    friends: allFriends,
-  })
+    return res.status(200).json({
+      success: true,
+      friends: availableFriends,
+    })
+  } else {
+    return res.status(200).json({
+      success: true,
+      friends,
+    })
+  }
 })

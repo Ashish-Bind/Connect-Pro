@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
+import { userSocketMap } from '../app.js'
 
 export const connectToDB = async ({ uri }) => {
   mongoose
@@ -39,4 +40,12 @@ export const deletFilesFromCloudinary = (public_ids) => {
   // public_ids.forEach((public_id) => {
   //   cloudinary.v2.uploader.destroy(public_id)
   // })
+}
+
+export const getSockets = (users) => {
+  const sockets = users.map((user) => {
+    return userSocketMap.get(user._id.toString())
+  })
+
+  return sockets
 }
