@@ -21,7 +21,6 @@ export const verifyAdmin = trycatch(async (req, res, next) => {
     .cookie('connect-pro-admin-token', token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
-      sameSite: 'none',
       secure: true,
     })
     .json({
@@ -36,7 +35,6 @@ export const logoutAdmin = trycatch(async (req, res) => {
     .cookie('connect-pro-admin-token', '', {
       expires: new Date(Date.now()),
       httpOnly: true,
-      sameSite: 'none',
       secure: true,
     })
     .json({

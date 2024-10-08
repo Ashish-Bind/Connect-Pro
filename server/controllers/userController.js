@@ -5,6 +5,7 @@ import {
   eventEmitter,
   getOtherMember,
   setCookieToken,
+  uploadFilesToCloudinary,
 } from '../utils/features.js'
 import { Request } from '../models/requestModel.js'
 import bcrypt from 'bcryptjs'
@@ -17,10 +18,14 @@ export const newUser = trycatch(async (req, res, next) => {
 
   if (!file) return next(new ErrorHandler('Please Upload Avatar'))
 
+  const result = await uploadFilesToCloudinary([file])
+
   const avatar = {
-    public_id: 'test',
-    url: 'test',
+    public_id: result[0].public_id,
+    url: result[0].url,
   }
+
+  console.log(avatar)
 
   const user = await User.create({
     name,
@@ -70,7 +75,7 @@ export const getUserProfile = trycatch(async (req, res, next) => {
   })
 })
 
-export const logout = trycatch(async (req, res) => {
+export const logout = trycatch(async (req, res, next) => {
   return res
     .status(200)
     .cookie('connect-pro-token', '', {
