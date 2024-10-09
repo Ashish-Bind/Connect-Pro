@@ -13,6 +13,7 @@ import {
   eventEmitter,
   getOtherMember,
   setCookieToken,
+  uploadFilesToCloudinary,
 } from '../utils/features.js'
 
 export const newGroupChat = trycatch(async (req, res, next) => {
@@ -51,17 +52,19 @@ export const getUserChats = trycatch(async (req, res, next) => {
   }).populate('members', 'name username avatar')
 
   const transfromedChats = chats.map(
-    ({ _id, name, members, groupChat, groupAvatar }) => {
+    ({ _id, name, members, groupChat, groupAvatar, username }) => {
       const otherMember = getOtherMember({
         members: members,
         userId: req.user._id,
       })
 
+      // fix: group avatar not working
       return {
         _id,
-        name: groupChat ? name : otherMember.name,
+        name: groupChat ? name : otherMember[0].name,
+        username: otherMember[0].username,
         groupChat,
-        avatar: groupChat ? groupAvatar.url : otherMember.avatar.url,
+        avatar: otherMember[0].avatar.url,
         members: members.reduce((prev, curr) => {
           if (curr._id.toString() !== req.user.toString()) {
             prev.push(curr._id)
@@ -74,7 +77,7 @@ export const getUserChats = trycatch(async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    chats: [],
+    chats: transfromedChats,
   })
 })
 
@@ -248,11 +251,7 @@ export const sendAttachments = trycatch(async (req, res, next) => {
     return next(new ErrorHandler('Chat not found', 404))
   }
 
-  if (!chat.groupChat) {
-    return next(new ErrorHandler('This is not a group chat', 400))
-  }
-
-  const attachments = []
+  const attachments = await uploadFilesToCloudinary(files)
 
   const messageDB = { content: '', attachments, sender: user._id, chat: chatId }
 
@@ -264,7 +263,7 @@ export const sendAttachments = trycatch(async (req, res, next) => {
   const message = await Message.create(messageDB)
 
   eventEmitter(req, NEW_MESSAGE, chat.members, {
-    message: messageRT,
+    ...messageRT,
     chatId,
   })
 
@@ -295,7 +294,10 @@ export const getChatDetails = trycatch(async (req, res, next) => {
       chat,
     })
   } else {
-    const chat = await Chat.findById(req.params.id)
+    const chat = await Chat.findById(req.params.id).populate(
+      'members',
+      'name avatar username bio'
+    )
     if (!chat) return next(new ErrorHandler('Chat not found', 404))
 
     return res.status(200).json({
@@ -387,9 +389,9 @@ export const getMessages = trycatch(async (req, res, next) => {
   const [messages, messageCount] = await Promise.all([
     Message.find({ chat: chatId })
       .sort({ createdAt: -1 })
-      .populate('sender', 'name avatar')
       .skip(skip)
       .limit(limit)
+      .populate('sender', 'name avatar')
       .lean(),
     Message.countDocuments({ chat: chatId }),
   ])

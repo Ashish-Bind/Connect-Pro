@@ -102,7 +102,7 @@ export const searchUser = trycatch(async (req, res, next) => {
   const allUsersFromMyChats = myChats.flatMap((chat) => chat.members)
 
   const allUsersExceptMeAndFriends = await User.find({
-    _id: { $nin: allUsersFromMyChats },
+    _id: { $nin: [...allUsersFromMyChats, req.user._id] },
     username: { $regex: username, $options: 'i' },
   })
 
@@ -148,7 +148,9 @@ export const sendFriendRequest = trycatch(async (req, res, next) => {
 export const acceptFriendRequest = trycatch(async (req, res, next) => {
   const { requestId, accept } = req.body
 
-  const [request, userId] = await Request.findById(requestId)
+  console.log(requestId, accept)
+
+  const request = await Request.findById(requestId)
     .populate('sender', 'name')
     .populate('receiver', 'name')
 
@@ -175,7 +177,7 @@ export const acceptFriendRequest = trycatch(async (req, res, next) => {
 
   await Promise.all([
     Chat.create({
-      name: `${request.sender.name} and ${request.receiver.name}`,
+      name: `${request.sender.name}-${request.receiver.name}`,
       members,
     }),
     request.deleteOne(),

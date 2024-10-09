@@ -30,11 +30,15 @@ export const setCookieToken = ({ res, user, message, statusCode }) => {
 }
 
 export const eventEmitter = (req, event, users, data) => {
-  console.log('event emitter')
+  const io = req.app.get('io')
+
+  const socketIds = getSockets(users)
+
+  io.to(socketIds).emit(event, data)
 }
 
 export const getOtherMember = ({ members, userId }) => {
-  return members.filter((member) => member.toString() !== userId.toString())
+  return members.filter((member) => member._id.toString() !== userId.toString())
 }
 
 export const getBase64 = (file) => {
@@ -79,7 +83,7 @@ export const deletFilesFromCloudinary = (public_ids) => {
 
 export const getSockets = (users) => {
   const sockets = users.map((user) => {
-    return userSocketMap.get(user._id.toString())
+    return userSocketMap.get(user.toString())
   })
 
   return sockets

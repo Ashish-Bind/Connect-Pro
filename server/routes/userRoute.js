@@ -1,5 +1,6 @@
 import express from 'express'
 import {
+  acceptFriendRequest,
   getAllNotifications,
   getUserProfile,
   login,
@@ -8,14 +9,14 @@ import {
   searchUser,
   sendFriendRequest,
 } from '../controllers/userController.js'
-import { upload } from '../middlewares/multer.js'
 import { isAuthenticated } from '../middlewares/auth.js'
+import { upload } from '../middlewares/multer.js'
 import {
+  acceptRequestValidator,
   loginValidator,
   registerValidator,
-  validateHandler,
   sendRequestValidator,
-  acceptRequestValidator,
+  validateHandler,
 } from '../utils/validators.js'
 
 const router = express.Router()
@@ -44,7 +45,7 @@ router.put(
   '/accept-request',
   acceptRequestValidator(),
   validateHandler,
-  sendFriendRequest
+  acceptFriendRequest
 )
 router.get('/all-notifications', getAllNotifications)
 
