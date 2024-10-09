@@ -2,11 +2,13 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material'
 import { Link } from './styles/StyledComponent'
 import React from 'react'
+import { mattBlack, primaryDark, primaryDarkest } from '../constants/color'
 
 const ChatItem = ({
   avatar,
   name,
   _id,
+  username,
   groupChat = false,
   sameSender,
   isOnline,
@@ -29,7 +31,7 @@ const ChatItem = ({
           padding: '1rem',
           gap: '1rem',
           position: 'relative',
-          backgroundColor: sameSender ? 'rgba(0, 0, 0, 0.2)' : 'unset',
+          backgroundColor: sameSender ? 'rgba(0, 0, 0, 0.1)' : 'unset',
           color: sameSender ? 'black' : 'unset',
         }}
       >
@@ -41,7 +43,18 @@ const ChatItem = ({
           }}
         />
         <Stack>
-          <Typography sx={{ fontFamily: 'Open Sans' }}>{name}</Typography>
+          <Typography
+            sx={{
+              fontFamily: 'Open Sans',
+              fontWeight: 'bold',
+              color: primaryDarkest,
+            }}
+          >
+            {name}
+          </Typography>
+          <Typography variant="caption" color={mattBlack}>
+            @{username}
+          </Typography>
 
           {newMessageAlert && newMessageAlert.count > 0 && (
             <Typography

@@ -6,27 +6,59 @@ import {
   DialogTitle,
   List,
   ListItem,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material'
 import React from 'react'
-import { notifications as sampleNotifications } from '../constants/data'
-import { secondary } from '../constants/color'
-import { useGetNotificationsQuery } from '../redux/query/api'
+import toast from 'react-hot-toast'
+import { useDispatch, useSelector } from 'react-redux'
+import { useErrors } from '../hooks/customHooks'
+import {
+  useAcceptFriendRequestMutation,
+  useGetNotificationsQuery,
+} from '../redux/query/api'
+import { setIsNotification } from '../redux/reducer/misc'
 
 const Notifications = () => {
-  const { data } = useGetNotificationsQuery('')
+  const dispatch = useDispatch()
 
-  const friendRequestHandler = ({ _id, accept }) => {}
+  const { isNotification } = useSelector((state) => state.misc)
+  const { data, isLoading, isError, error } = useGetNotificationsQuery('')
+  const [acceptFriendRequest] = useAcceptFriendRequestMutation()
+
+  const friendRequestHandler = async ({ _id, accept }) => {
+    try {
+      const res = await acceptFriendRequest({ requestId: _id, accept })
+      console.log(res)
+      if (res.data?.success) {
+        console.log('use socket')
+        toast.success(res.data.message)
+      } else {
+        toast.error(res?.error.message || 'Something went wrong')
+      }
+    } catch (error) {
+      toast.error('Something went wrong')
+      console.log(error)
+    }
+  }
+
+  useErrors([{ isError, error }])
+
+  const handleNotificationClose = () => {
+    dispatch(setIsNotification(false))
+  }
 
   return (
-    <Dialog open>
+    <Dialog open={isNotification} onClose={handleNotificationClose}>
       <Stack p={'2rem'} direction={'column'} width={'max'}>
         <DialogTitle textAlign={'center'}>Notifications</DialogTitle>
 
-        {sampleNotifications.length > 0 ? (
+        {isLoading ? (
+          <Skeleton />
+        ) : data?.requests.length > 0 ? (
           <List sx={{ gap: '1rem' }}>
-            {sampleNotifications.map((i) => (
+            {data?.requests?.map((i) => (
               <NotificationItem
                 key={i._id}
                 sender={i.sender}
@@ -48,7 +80,7 @@ const NotificationItem = React.memo(function NotificationItemComponent({
   _id,
   handler,
 }) {
-  const { username: name, avatar } = sender
+  const { name, avatar } = sender
 
   return (
     <ListItem>

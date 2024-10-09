@@ -23,7 +23,7 @@ const ChatList = ({
       sx={{ overflow: 'auto', height: '100%' }}
     >
       {chats?.map((chat, index) => {
-        const { _id, name, groupChat, avatar, members } = chat
+        const { _id, name, groupChat, avatar, members, username } = chat
 
         const newMessageAlerts = newMessageAlert.find(
           ({ chatId }) => chatId === _id
@@ -43,6 +43,7 @@ const ChatList = ({
             avatar={avatar}
             groupChat={groupChat}
             sameSender={sameSender}
+            username={username}
             members={members}
             handleDeleteChatOpen={handleDeleteChat}
           />

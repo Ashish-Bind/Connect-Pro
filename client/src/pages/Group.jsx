@@ -21,11 +21,18 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material'
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { chats, users as sampleUsers } from '../constants/data'
-import { gray, primary, primaryDark, tertiary } from '../constants/color'
+import {
+  gray,
+  primary,
+  primaryDark,
+  primaryDarkest,
+  tertiary,
+} from '../constants/color'
 import AddMemberDialog from '../components/dialogs/AddMemberDialog'
 import UserItem from '../components/UserItem'
+import { Link } from '../components/styles/StyledComponent'
 
 const ConfirmDialog = lazy(() => import('../components/dialogs/ConfirmDialog'))
 
@@ -318,7 +325,14 @@ const GroupListItem = memo(({ group, chatId }) => {
         padding={'1rem'}
       >
         <Avatar src={avatar} />
-        <Typography textAlign={'center'}>{name}</Typography>
+        <Typography
+          sx={{
+            fontWeight: 'bold',
+            color: primaryDarkest,
+          }}
+        >
+          {name}
+        </Typography>
       </Stack>
     </Link>
   )
