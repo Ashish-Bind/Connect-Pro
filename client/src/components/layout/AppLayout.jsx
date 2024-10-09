@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable react/display-name */
 import { useParams } from 'react-router-dom'
-import { chats } from '../../constants/data'
 import ChatList from '../ChatList'
 import Title from '../Title'
 import Header from './Header'
@@ -11,18 +10,25 @@ import { secondary, tertiary } from '../../constants/color'
 import { useGetChatsQuery } from '../../redux/query/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { setIsMobile } from '../../redux/reducer/misc'
-import { useErrors } from '../../hooks/customHooks'
+import { useErrors, useSocketEvents } from '../../hooks/customHooks'
+import { useSocket } from '../../utils/socket'
+import { NEW_MESSAGE_ALERT, NEW_REQUEST } from '../../constants/events'
+import { useCallback } from 'react'
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
+    const { isMobile } = useSelector((state) => state.misc)
     const params = useParams()
     const dispatch = useDispatch()
-    const { isMobile } = useSelector((state) => state.misc)
     const chatId = params.id
+
+    const socket = useSocket()
 
     const { data, isError, isLoading, error, refetch } = useGetChatsQuery('')
 
     useErrors([{ isError, error }])
+
+    console.log(data?.chats)
 
     const handleDeleteChat = (e, chatId, groupChat) => {
       e.preventDefault()
@@ -32,6 +38,17 @@ const AppLayout = () => (WrappedComponent) => {
     const handleMobileClose = () => {
       dispatch(setIsMobile(false))
     }
+
+    const newMessageAlertHandler = useCallback((data) => {}, [])
+
+    const newRequestHandler = useCallback((data) => {}, [])
+
+    const events = {
+      [NEW_MESSAGE_ALERT]: newMessageAlertHandler,
+      [NEW_REQUEST]: newRequestHandler,
+    }
+
+    useSocketEvents(socket, events)
 
     return (
       <>
@@ -76,7 +93,7 @@ const AppLayout = () => (WrappedComponent) => {
           </Grid2>
 
           <Grid2 size={{ xs: 12, sm: 8, md: 5, lg: 6 }} height={'100%'}>
-            <WrappedComponent {...props} />
+            <WrappedComponent {...props} chatId={chatId} />
           </Grid2>
 
           <Grid2

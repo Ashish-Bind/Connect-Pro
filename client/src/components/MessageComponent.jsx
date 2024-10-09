@@ -7,7 +7,9 @@ import { fileFormat } from '../libs/features'
 import RenderAttachment from './RenderAttachment'
 
 const Message = ({ message, user }) => {
-  const { sender, content, attachments = [], createdAt } = message
+  const { sender, content, attachments, createdAt } = message
+
+  console.log(message)
 
   const sameSender = sender?._id === user?._id
 
@@ -26,7 +28,7 @@ const Message = ({ message, user }) => {
     >
       {
         <Typography color={primary} fontWeight={'600'} variant="caption">
-          {!sameSender ? sender.name : 'You  '}
+          {!sameSender ? sender?.name : 'You  '}
         </Typography>
       }
       {content && <Typography>{content}</Typography>}

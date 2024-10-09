@@ -24,7 +24,11 @@ import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
 import { SERVER } from '../../constants/config'
 import { userNotExists } from '../../redux/reducer/auth'
-import { setIsMobile, setIsSearch } from '../../redux/reducer/misc'
+import {
+  setIsMobile,
+  setIsNotification,
+  setIsSearch,
+} from '../../redux/reducer/misc'
 import ConfirmDialog from '../dialogs/ConfirmDialog'
 
 const SearchDialog = lazy(() => import('../Search'))
@@ -35,10 +39,11 @@ const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const { isMobile, isSearch } = useSelector((state) => state.misc)
+  const { isMobile, isSearch, isNotification } = useSelector(
+    (state) => state.misc
+  )
 
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
 
   const handleMobileOpen = () => {
@@ -57,8 +62,8 @@ const Header = () => {
     navigate('/group')
   }
 
-  const handleNotification = () => {
-    setIsNotificationOpen(!isNotificationOpen)
+  const handleNotificationOpen = () => {
+    dispatch(setIsNotification(true))
   }
 
   const handleLogout = () => {
@@ -119,7 +124,7 @@ const Header = () => {
                 </Tooltip>
 
                 <Tooltip title="Notifications">
-                  <IconButton color="inherit" onClick={handleNotification}>
+                  <IconButton color="inherit" onClick={handleNotificationOpen}>
                     <NotificationsIcon />
                   </IconButton>
                 </Tooltip>
@@ -147,7 +152,7 @@ const Header = () => {
         </Suspense>
       )}
 
-      {isNotificationOpen && (
+      {isNotification && (
         <Suspense fallback={<Backdrop open />}>
           <NotificationsDialog />
         </Suspense>
