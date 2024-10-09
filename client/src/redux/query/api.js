@@ -4,7 +4,7 @@ import { SERVER } from '../../constants/config.js'
 const api = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({ baseUrl: `${SERVER}/api/v1` }),
-  tagTypes: ['chat', 'user'],
+  tagTypes: ['chat', 'user', 'message'],
   endpoints: (builder) => ({
     getChats: builder.query({
       query: () => ({ url: '/chat/all-chats', credentials: 'include' }),
@@ -33,6 +33,45 @@ const api = createApi({
       }),
       keepUnusedDataFor: 0,
     }),
+    acceptFriendRequest: builder.mutation({
+      query: (data) => ({
+        url: '/user/accept-request',
+        method: 'PUT',
+        body: data,
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    getChatDetails: builder.query({
+      query: ({ chatId, populate }) => {
+        let url = `/chat/${chatId}`
+
+        if (populate) {
+          url += `?populate=true`
+        }
+
+        return {
+          url,
+          credentials: 'include',
+        }
+      },
+      providesTags: ['chat'],
+    }),
+    getOldMessages: builder.query({
+      query: ({ chatId, page }) => ({
+        url: `/chat/messages/${chatId}?page=${page}`,
+        credentials: 'include',
+      }),
+      providesTags: ['chat'],
+    }),
+    sendAttachments: builder.mutation({
+      query: (data) => ({
+        url: '/chat/send-attachments',
+        method: 'POST',
+        body: data,
+        credentials: 'include',
+      }),
+    }),
   }),
 })
 
@@ -42,4 +81,8 @@ export const {
   useLazySearchUserQuery,
   useSendRequestMutation,
   useGetNotificationsQuery,
+  useAcceptFriendRequestMutation,
+  useGetChatDetailsQuery,
+  useGetOldMessagesQuery,
+  useSendAttachmentsMutation,
 } = api
