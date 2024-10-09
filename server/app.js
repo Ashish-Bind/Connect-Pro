@@ -14,6 +14,8 @@ import adminRoute from './routes/adminRoute.js'
 import { connectToDB, getSockets } from './utils/features.js'
 import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from './constants/events.js'
 import { Message } from './models/messageModel.js'
+import { corsOptions } from './constants/config.js'
+import { socketAuthenticator } from './middlewares/auth.js'
 
 dotenv.config({
   path: './.env',
@@ -34,18 +36,13 @@ connectToDB({ uri: MONGO_URI })
 
 const app = express()
 const server = http.createServer(app)
-const io = new Server(server)
+const io = new Server(server, {
+  cors: corsOptions,
+})
 
-app.use(
-  cors({
-    credentials: true,
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:4173r',
-      process.env.CLIENT_URL,
-    ],
-  })
-)
+app.set('io', io)
+
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -57,17 +54,18 @@ app.get('/', (req, res) => {
   res.send('Hello World')
 })
 
-io.use((socket, next) => {})
+io.use((socket, next) => {
+  cookieParser()(socket.request, socket.request.res, async (err) => {
+    await socketAuthenticator(err, socket, next)
+  })
+})
 
 io.on('connection', (socket) => {
-  const user = {
-    _id: 'asfdasf',
-    name: 'test',
-  }
+  const user = socket.user
 
-  userSocketMap.set(user._id.toString(), socket).id
+  userSocketMap.set(user._id.toString(), socket.id)
 
-  console.log(`user connecte ${socket.id}`)
+  console.log(userSocketMap)
 
   socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
     const messageRT = {
@@ -75,7 +73,7 @@ io.on('connection', (socket) => {
       _id: uuid(),
       sender: {
         _id: user._id,
-        name: user._id,
+        name: user.name,
       },
       chat: chatId,
       createdAt: new Date().toISOString(),
@@ -83,13 +81,15 @@ io.on('connection', (socket) => {
 
     const messageDB = {
       content: message,
-      user: user._id,
+      sender: user._id,
       chat: chatId,
     }
 
     const membersSocket = getSockets(members)
 
-    io.to(membersSocket).emit(NEW_MESSAGE, { chatId, messageRT })
+    console.log(messageRT)
+
+    io.to(membersSocket).emit(NEW_MESSAGE, { chat: chatId, ...messageRT })
 
     io.to(membersSocket).emit(NEW_MESSAGE_ALERT, { chatId })
 
