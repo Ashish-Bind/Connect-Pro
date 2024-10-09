@@ -8,6 +8,7 @@ import { LayoutLoader } from './components/layout/Loaders.jsx'
 import { SERVER } from './constants/config.js'
 import { useDispatch, useSelector } from 'react-redux'
 import { userExists, userNotExists } from './redux/reducer/auth.js'
+import SocketProvider from './utils/socket.jsx'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
 const Login = lazy(() => import('./pages/Login.jsx'))
@@ -42,7 +43,13 @@ function App() {
     <Router>
       <Suspense fallback={<LayoutLoader />}>
         <Routes>
-          <Route element={<ProtectedRoute user={user} />}>
+          <Route
+            element={
+              <SocketProvider>
+                <ProtectedRoute user={user} />
+              </SocketProvider>
+            }
+          >
             <Route path="/" element={<Home />} />
             <Route path="/chat/:id" element={<Chat />} />
             <Route path="/group" element={<Group />} />
