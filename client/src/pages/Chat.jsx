@@ -4,13 +4,18 @@ import {
   Send as SendIcon,
 } from '@mui/icons-material'
 import { IconButton, Skeleton, Stack } from '@mui/material'
-import React, { useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import AppLayout from '../components/layout/AppLayout'
 import Message from '../components/MessageComponent'
 import { InputBox } from '../components/styles/StyledComponent'
 import { gray, primary, primaryDark } from '../constants/color'
-import { NEW_MESSAGE } from '../constants/events'
+import {
+  ALERT,
+  END_TYPING,
+  NEW_MESSAGE,
+  START_TYPING,
+} from '../constants/events'
 import { useErrors, useSocketEvents } from '../hooks/customHooks'
 import {
   useGetChatDetailsQuery,
@@ -19,15 +24,25 @@ import {
 import { useSocket } from '../utils/socket'
 import { setIsFileMenu } from '../redux/reducer/misc'
 import FileMenu from '../components/dialogs/FileMenu'
+import { removeNewMessagesAlert } from '../redux/reducer/chat'
+import { TypingLoader } from '../components/layout/Loaders'
+import { FLASK_SERVER } from '../constants/config'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 const Chat = ({ chatId }) => {
   const dispatch = useDispatch()
 
-  const containerRef = React.useRef(null)
-  const [message, setMessage] = React.useState('')
-  const [messages, setMessages] = React.useState([])
-  const [page, setPage] = React.useState(1)
-  const [fileMenuAnchor, setFileMenuAnchor] = React.useState(null)
+  const containerRef = useRef(null)
+  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState([])
+  const [page, setPage] = useState(1)
+  const [fileMenuAnchor, setFileMenuAnchor] = useState(null)
+  const [isTyping, setIsTyping] = useState(false)
+  const [isUserTyping, setIsUserTyping] = useState(false)
+  const [isHateSpeech, setIsHateSpeech] = useState(false)
+  const typingTimeout = useRef(null)
+  const bottomRef = useRef(null)
 
   const { user } = useSelector((state) => state.auth)
 
@@ -64,6 +79,27 @@ const Chat = ({ chatId }) => {
     },
   ]
 
+  const messageHandler = (e) => {
+    setMessage(e.target.value)
+    if (!isTyping) {
+      setIsTyping(true)
+      socket.emit(START_TYPING, {
+        members: chatDetails?.data?.chat?.members.map((i) => i._id),
+        chatId,
+      })
+    }
+
+    if (typingTimeout.current) clearTimeout(typingTimeout.current)
+
+    typingTimeout.current = setTimeout(() => {
+      socket.emit(END_TYPING, {
+        members: chatDetails?.data?.chat?.members.map((i) => i._id),
+        chatId,
+      })
+      setIsTyping(false)
+    }, 3000)
+  }
+
   const allMessages = [...oldMessages, ...messages].sort(
     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   )
@@ -72,21 +108,96 @@ const Chat = ({ chatId }) => {
     e.preventDefault()
     if (!message) return
 
-    const members = chatDetails?.data?.chat?.members.map((i) => i._id)
+    axios
+      .post(`${FLASK_SERVER}/api/v2/process-message`, { message: message })
+      .then((res) => {
+        const members = chatDetails?.data?.chat?.members.map((i) => i._id)
+        if (res?.data?.isSlangReplaced) {
+          setMessages((prev) => [...prev, res.data.message])
+          socket.emit(NEW_MESSAGE, {
+            message: res.data.message,
+            members,
+            chatId,
+          })
+        } else {
+          socket.emit(NEW_MESSAGE, {
+            message,
+            members,
+            chatId,
+          })
+        }
+      })
+      .catch((err) => {
+        setIsHateSpeech(true)
+        toast.error(err?.response?.data?.message)
+      })
 
-    socket.emit(NEW_MESSAGE, {
-      message,
-      members,
-      chatId,
-    })
     setMessage('')
   }
 
-  const newMessageHandler = useCallback((data) => {
-    setMessages((prev) => [...prev, data])
-  }, [])
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages])
 
-  const events = { [NEW_MESSAGE]: newMessageHandler }
+  useEffect(() => {
+    dispatch(removeNewMessagesAlert(chatId))
+    return () => {
+      setMessages([])
+      setMessage('')
+      setPage(1)
+      setOldMessages([])
+    }
+  }, [chatId])
+
+  const newMessageHandler = useCallback(
+    (data) => {
+      if (data.chat !== chatId) return
+      setMessages((prev) => [...prev, data])
+    },
+    [chatId]
+  )
+
+  const startTypingListener = useCallback(
+    (data) => {
+      if (data.chatId !== chatId) return
+      setIsUserTyping(true)
+    },
+    [chatId]
+  )
+
+  const endTypingListener = useCallback(
+    (data) => {
+      if (data.chatId !== chatId) return
+      setIsUserTyping(false)
+    },
+    [chatId]
+  )
+
+  const alertListener = useCallback(
+    (data) => {
+      const messageAlert = {
+        content: data,
+        sender: {
+          _id: 'asdfljofhiagn',
+          name: 'Admin',
+        },
+        chat: chatId,
+        createdAt: new Date().toISOString(),
+      }
+
+      setMessages((prev) => [...prev, messageAlert])
+    },
+    [chatId]
+  )
+
+  const events = {
+    [NEW_MESSAGE]: newMessageHandler,
+    [START_TYPING]: startTypingListener,
+    [END_TYPING]: endTypingListener,
+    [ALERT]: alertListener,
+  }
 
   useSocketEvents(socket, events)
 
@@ -107,6 +218,10 @@ const Chat = ({ chatId }) => {
         {allMessages.map((i, index) => (
           <Message key={index} message={i} user={user} />
         ))}
+
+        {isUserTyping && <TypingLoader />}
+
+        <div ref={bottomRef} />
       </Stack>
 
       <form style={{ height: '10%' }} onSubmit={handleSubmit}>
@@ -125,9 +240,7 @@ const Chat = ({ chatId }) => {
             placeholder="Type a message..."
             sx={{ fontFamily: 'Open Sans' }}
             value={message}
-            onChange={(e) => {
-              setMessage(e.target.value)
-            }}
+            onChange={messageHandler}
           />
           <IconButton
             sx={{

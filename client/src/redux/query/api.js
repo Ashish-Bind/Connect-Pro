@@ -62,7 +62,7 @@ const api = createApi({
         url: `/chat/messages/${chatId}?page=${page}`,
         credentials: 'include',
       }),
-      providesTags: ['chat'],
+      keepUnusedDataFor: 0,
     }),
     sendAttachments: builder.mutation({
       query: (data) => ({
