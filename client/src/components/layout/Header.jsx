@@ -9,6 +9,7 @@ import {
 import {
   AppBar,
   Backdrop,
+  Badge,
   Box,
   IconButton,
   Toolbar,
@@ -42,6 +43,7 @@ const Header = () => {
   const { isMobile, isSearch, isNotification } = useSelector(
     (state) => state.misc
   )
+  const { notificationCount } = useSelector((state) => state.chat)
 
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
@@ -124,8 +126,14 @@ const Header = () => {
                 </Tooltip>
 
                 <Tooltip title="Notifications">
-                  <IconButton color="inherit" onClick={handleNotificationOpen}>
-                    <NotificationsIcon />
+                  <IconButton
+                    color="inherit"
+                    onClick={handleNotificationOpen}
+                    size="large"
+                  >
+                    <Badge badgeContent={notificationCount} color="error">
+                      <NotificationsIcon />
+                    </Badge>
                   </IconButton>
                 </Tooltip>
 

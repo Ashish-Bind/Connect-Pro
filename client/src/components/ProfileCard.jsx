@@ -8,6 +8,7 @@ import {
 import { Avatar, Stack, Typography } from '@mui/material'
 import moment from 'moment'
 import { useSelector } from 'react-redux'
+import { primary, primaryDark } from '../constants/color'
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth)
@@ -27,19 +28,19 @@ const Profile = () => {
           border: '2px solid black',
           marginBottom: '1rem',
         }}
-        src={user.avatar.url}
+        src={user?.avatar?.url}
       />
-      <ProfileCard text={'Bio'} Icon={<CameraAlt />} heading={user.bio} />
+      <ProfileCard text={'Bio'} Icon={<CameraAlt />} heading={user?.bio} />
       <ProfileCard
         text={'Username'}
         Icon={<EmailIcon />}
         heading={user.username}
       />
-      <ProfileCard text={'Name'} Icon={<FaceIcon />} heading={user.name} />
+      <ProfileCard text={'Name'} Icon={<FaceIcon />} heading={user?.name} />
       <ProfileCard
         text={'Joined'}
         Icon={<CalendarIcon />}
-        heading={moment(user.createdAt).fromNow()}
+        heading={moment(user?.createdAt).fromNow()}
       />
     </Stack>
   )
@@ -57,7 +58,9 @@ const ProfileCard = ({ text, Icon, heading }) => {
       {Icon && Icon}
 
       <Stack>
-        <Typography variant="body1">{heading}</Typography>
+        <Typography variant="body1" fontWeight={'bold'} color={primaryDark}>
+          {heading}
+        </Typography>
         <Typography variant="caption" color="gray">
           {text}
         </Typography>

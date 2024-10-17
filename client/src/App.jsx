@@ -14,6 +14,7 @@ const Home = lazy(() => import('./pages/Home.jsx'))
 const Login = lazy(() => import('./pages/Login.jsx'))
 const Group = lazy(() => import('./pages/Group.jsx'))
 const Chat = lazy(() => import('./pages/Chat.jsx'))
+const AssistantChat = lazy(() => import('./pages/AssistantChat.jsx'))
 const NotFound = lazy(() => import('./pages/NotFound.jsx'))
 
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin.jsx'))
@@ -29,7 +30,6 @@ function App() {
     axios
       .get(`${SERVER}/api/v1/user/profile`, { withCredentials: true })
       .then(({ data }) => {
-        console.log(data)
         dispatch(userExists(data.user))
       })
       .catch((err) => {
@@ -53,6 +53,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/chat/:id" element={<Chat />} />
             <Route path="/group" element={<Group />} />
+            <Route path="/ai-chat/" element={<AssistantChat />} />
           </Route>
 
           <Route
@@ -74,7 +75,7 @@ function App() {
         </Routes>
       </Suspense>
 
-      <Toaster position="bottom-center" />
+      <Toaster position="top-center" />
     </Router>
   )
 }

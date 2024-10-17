@@ -7,9 +7,7 @@ import { fileFormat } from '../libs/features'
 import RenderAttachment from './RenderAttachment'
 
 const Message = ({ message, user }) => {
-  const { sender, content, attachments, createdAt } = message
-
-  console.log(message)
+  const { sender, content, attachments = [], createdAt } = message
 
   const sameSender = sender?._id === user?._id
 

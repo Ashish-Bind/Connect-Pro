@@ -15,10 +15,11 @@ const ChatItem = ({
   newMessageAlert,
   index = 0,
   handleDeleteChat,
+  customUrl = '',
 }) => {
   return (
     <Link
-      to={`/chat/${_id}`}
+      to={customUrl ? customUrl : `/chat/${_id}`}
       onContextMenu={(e) => handleDeleteChat(e, _id, groupChat)}
       sx={{
         padding: 0,

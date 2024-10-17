@@ -49,6 +49,21 @@ const ChatList = ({
           />
         )
       })}
+
+      <Stack sx={{ marginTop: 'auto' }}>
+        <ChatItem
+          index={1}
+          key={1}
+          _id={'1'}
+          name={'ConnectPro. AI'}
+          avatar={
+            'https://res.cloudinary.com/dpjoc6hra/image/upload/v1728498301/bfye4kbb7ykcwljg6poi.jpg'
+          }
+          username={'connectpro.ai'}
+          members={[]}
+          customUrl="/ai-chat"
+        />
+      </Stack>
     </Stack>
   )
 }
