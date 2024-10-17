@@ -12,7 +12,12 @@ import chatRoute from './routes/chatRoute.js'
 import userRoute from './routes/userRoute.js'
 import adminRoute from './routes/adminRoute.js'
 import { connectToDB, getSockets } from './utils/features.js'
-import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from './constants/events.js'
+import {
+  END_TYPING,
+  NEW_MESSAGE,
+  NEW_MESSAGE_ALERT,
+  START_TYPING,
+} from './constants/events.js'
 import { Message } from './models/messageModel.js'
 import { corsOptions } from './constants/config.js'
 import { socketAuthenticator } from './middlewares/auth.js'
@@ -98,6 +103,16 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.log(error)
     }
+  })
+
+  socket.on(START_TYPING, ({ members, chatId }) => {
+    const membersSocket = getSockets(members)
+    socket.to(membersSocket).emit(START_TYPING, { chatId })
+  })
+
+  socket.on(END_TYPING, ({ members, chatId }) => {
+    const membersSocket = getSockets(members)
+    socket.to(membersSocket).emit(END_TYPING, { chatId })
   })
 
   socket.on('disconnect', () => {
