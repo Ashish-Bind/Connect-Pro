@@ -72,6 +72,102 @@ const api = createApi({
         credentials: 'include',
       }),
     }),
+    getGroups: builder.query({
+      query: () => ({ url: '/chat/all-group-chats', credentials: 'include' }),
+      providesTags: ['chat'],
+    }),
+    getUserFriends: builder.query({
+      query: (chatId) => {
+        let url = `/user/all-friends/`
+
+        if (chatId) {
+          url += `?chatId=${chatId}`
+        }
+
+        return {
+          url,
+          credentials: 'include',
+        }
+      },
+      providesTags: ['chat'],
+    }),
+    newGroup: builder.mutation({
+      query: (data) => ({
+        url: '/chat/new-group',
+        method: 'POST',
+        body: data,
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    renameGroup: builder.mutation({
+      query: ({ chatId, name }) => ({
+        url: `/chat/${chatId}`,
+        method: 'PUT',
+        body: { name },
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    removeGroupMember: builder.mutation({
+      query: ({ chatId, userId }) => ({
+        url: `/chat/remove-member`,
+        method: 'PUT',
+        body: { chatId, userId },
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    addGroupMember: builder.mutation({
+      query: ({ chatId, members }) => ({
+        url: `/chat/add-new-member`,
+        method: 'PUT',
+        body: { chatId, members },
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    deleteChat: builder.mutation({
+      query: (chatId) => ({
+        url: `/chat/${chatId}`,
+        method: 'DELETE',
+        credentials: 'include',
+      }),
+      invalidatesTags: ['chat'],
+    }),
+    adminLogin: builder.mutation({
+      query: (secret) => ({
+        url: `/admin/verify`,
+        method: 'POST',
+        credentials: 'include',
+        body: { secret },
+      }),
+    }),
+    adminLogout: builder.mutation({
+      query: () => ({
+        url: `/admin/logout`,
+        method: 'POST',
+        credentials: 'include',
+      }),
+    }),
+    dashboardStats: builder.query({
+      query: () => ({
+        url: `/admin/stats`,
+        credentials: 'include',
+      }),
+    }),
+    userStats: builder.query({
+      query: () => ({
+        url: `/admin/users`,
+        credentials: 'include',
+      }),
+    }),
+    chatStats: builder.query({
+      query: () => ({
+        url: `/admin/chats`,
+        credentials: 'include',
+      }),
+    }),
   }),
 })
 
@@ -85,4 +181,16 @@ export const {
   useGetChatDetailsQuery,
   useGetOldMessagesQuery,
   useSendAttachmentsMutation,
+  useGetGroupsQuery,
+  useGetUserFriendsQuery,
+  useNewGroupMutation,
+  useRenameGroupMutation,
+  useRemoveGroupMemberMutation,
+  useAddGroupMemberMutation,
+  useDeleteChatMutation,
+  useAdminLoginMutation,
+  useAdminLogoutMutation,
+  useDashboardStatsQuery,
+  useUserStatsQuery,
+  useChatStatsQuery,
 } = api

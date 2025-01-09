@@ -2,6 +2,7 @@ import express from 'express'
 import {
   allChats,
   allUsers,
+  getAdminData,
   getDashboardStats,
   logoutAdmin,
   verifyAdmin,
@@ -19,5 +20,7 @@ router.use(isAuthenticatedAdmin)
 router.get('/users', allUsers)
 router.get('/chats', allChats)
 router.get('/stats', getDashboardStats)
+
+router.get('/', getAdminData)
 
 export default router

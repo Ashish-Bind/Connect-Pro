@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import AdminLayout from './layout/AdminLayout'
 import {
   Box,
@@ -20,6 +20,7 @@ import {
 import moment from 'moment'
 import { mattBlack } from '../../constants/color'
 import { DoughnutChart, LineChart } from '../../components/Charts'
+import { useDashboardStatsQuery } from '../../redux/query/api'
 
 const Appbar = (
   <Paper elevation={3} sx={{ padding: '2rem', margin: '2rem 0' }}>
@@ -87,7 +88,7 @@ const Widget = ({ title, value, Icon }) => {
   )
 }
 
-const Widgets = (
+const Widgets = ({ userCount, chatCount, messageCount }) => (
   <Stack
     direction={{
       xs: 'column',
@@ -98,13 +99,17 @@ const Widgets = (
     alignItems={'center'}
     margin={'2rem 0'}
   >
-    <Widget title={'Users'} value={65} Icon={<PersonIcon />} />
-    <Widget title={'Chats'} value={32} Icon={<GroupIcon />} />
-    <Widget title={'Messages'} value={578} Icon={<MessageIcon />} />
+    <Widget title={'Users'} value={userCount} Icon={<PersonIcon />} />
+    <Widget title={'Chats'} value={chatCount} Icon={<GroupIcon />} />
+    <Widget title={'Messages'} value={messageCount} Icon={<MessageIcon />} />
   </Stack>
 )
 
 const Dashboard = () => {
+  const { data, isLoading } = useDashboardStatsQuery()
+
+  const { stats } = data || {}
+
   return (
     <AdminLayout>
       <Container component={'main'}>
@@ -135,7 +140,7 @@ const Dashboard = () => {
               Last Messages
             </Typography>
 
-            <LineChart value={[1, 4, 13, 29, 35, 21, 66]} />
+            <LineChart value={stats?.messages} />
           </Paper>
 
           <Paper
@@ -152,7 +157,7 @@ const Dashboard = () => {
           >
             <DoughnutChart
               labels={['Single Chats', 'Group Chats']}
-              value={[87, 13]}
+              value={[stats?.chatCount, stats?.groupCount]}
             />
 
             <Stack
@@ -170,7 +175,7 @@ const Dashboard = () => {
           </Paper>
         </Stack>
 
-        {Widgets}
+        <Widgets {...stats} />
       </Container>
     </AdminLayout>
   )

@@ -1,4 +1,12 @@
 import {
+  Chat as ChatIcon,
+  Close as CloseIcon,
+  Dashboard as DashboardIcon,
+  ExitToApp as ExitToAppIcon,
+  Menu as MenuIcon,
+  Person as UserIcon,
+} from '@mui/icons-material'
+import {
   Box,
   Drawer,
   Grid2,
@@ -6,18 +14,14 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import {
-  Menu as MenuIcon,
-  Close as CloseIcon,
-  Dashboard as DashboardIcon,
-  Chat as ChatIcon,
-  Person as UserIcon,
-  ExitToApp as ExitToAppIcon,
-} from '@mui/icons-material'
-import { gray, mattBlack } from '../../../constants/color'
 import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Link } from '../../../components/styles/StyledComponent'
-import ConfirmDialog from '../../../components/dialogs/ConfirmDialog'
+import { gray, mattBlack } from '../../../constants/color'
+import { useAsyncMutation } from '../../../hooks/customHooks'
+import { useAdminLogoutMutation } from '../../../redux/query/api'
+import { adminNotExists } from '../../../redux/reducer/auth'
 
 const adminTabs = [
   {
@@ -37,7 +41,25 @@ const adminTabs = [
   },
 ]
 
-const Sidebar = ({ w = '100%', handler }) => {
+const Sidebar = ({ w = '100%' }) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { isAdmin } = useSelector((state) => state.auth)
+
+  const [adminLogout, isAdminLogoutLoading] = useAsyncMutation(
+    useAdminLogoutMutation
+  )
+  const logoutHandler = () => {
+    adminLogout('Admin logged out...').then(() => {
+      dispatch(adminNotExists())
+      navigate('/admin')
+    })
+  }
+
+  if (!isAdmin && isAdminLogoutLoading) {
+    return <div>Loading...</div>
+  }
+
   return (
     <Stack width={w} direction={'column'} p={'3rem'} spacing={'3rem'}>
       <Typography variant="h5">ConnectPro.</Typography>
@@ -60,7 +82,7 @@ const Sidebar = ({ w = '100%', handler }) => {
           </Link>
         ))}
 
-        <Link onClick={handler}>
+        <Link to="/admin" onClick={logoutHandler}>
           <Stack direction={'row'} alignItems={'center'} spacing={'1rem'}>
             <ExitToAppIcon />
             <Typography>Logout</Typography>
@@ -72,20 +94,21 @@ const Sidebar = ({ w = '100%', handler }) => {
 }
 
 const AdminLayout = ({ children }) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { isAdmin } = useSelector((state) => state.auth)
+
+  const [adminLogout, isAdminLogoutLoading] = useAsyncMutation(
+    useAdminLogoutMutation
+  )
+
   const [isMobile, setIsMobile] = useState(false)
-  const [isLogoutOpen, setIsLogoutOpen] = useState(false)
 
   const handleMobile = () => setIsMobile(!isMobile)
 
   const handleMobileClose = () => setIsMobile(false)
 
-  const handleLogout = () => setIsLogoutOpen(true)
-
-  const closeLogout = () => setIsLogoutOpen(false)
-
-  const logoutHandler = () => {
-    console.log('logoutHandler')
-  }
+  if (!isAdmin) return <Navigate to="/admin" />
 
   return (
     <Grid2 container sx={{ minHeight: '100vh' }}>
@@ -105,7 +128,7 @@ const AdminLayout = ({ children }) => {
         sx={{ display: { xs: 'none', md: 'block' } }}
         size={{ lg: 3, md: 4 }}
       >
-        <Sidebar handler={handleLogout} />
+        <Sidebar />
       </Grid2>
       <Grid2 size={{ lg: 9, md: 8, xs: 12 }} bgcolor={gray}>
         {children}
@@ -116,18 +139,8 @@ const AdminLayout = ({ children }) => {
         onClose={handleMobileClose}
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
-        <Sidebar handler={handleLogout} />
+        <Sidebar />
       </Drawer>
-
-      {isLogoutOpen && (
-        <ConfirmDialog
-          open={isLogoutOpen}
-          title={'Logout'}
-          description={'Are you sure you want to logout?'}
-          handleClose={() => setIsLogoutOpen(false)}
-          deleteHandler={logoutHandler}
-        />
-      )}
     </Grid2>
   )
 }

@@ -1,11 +1,53 @@
 import { useStrongPassword } from '6pp'
 import { Button, Container, Paper, TextField, Typography } from '@mui/material'
-import { secondary } from '../../constants/color'
+import { primary, primaryDark, secondary } from '../../constants/color'
+import { useAsyncMutation } from '../../hooks/customHooks'
+import { useAdminLoginMutation } from '../../redux/query/api'
+import { useDispatch, useSelector } from 'react-redux'
+import toast from 'react-hot-toast'
+import { adminExists, adminNotExists } from '../../redux/reducer/auth'
+import { useEffect } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { SERVER } from '../../constants/config'
 
 const AdminLogin = () => {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
   const password = useStrongPassword()
+  const { isAdmin, isLoading } = useSelector((state) => state.auth)
 
-  const submitHandler = () => {}
+  const [adminLogin, isAdminLoginLoading] = useAsyncMutation(
+    useAdminLoginMutation
+  )
+
+  useEffect(() => {
+    if (!isLoading) {
+      axios
+        .get(`${SERVER}/api/v1/admin`, { withCredentials: true })
+        .then(({ data }) => {
+          dispatch(adminExists())
+        })
+        .catch((err) => {
+          dispatch(adminNotExists())
+        })
+    }
+  }, [isAdmin, isLoading])
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (isAdmin) {
+    return <Navigate to="/admin/dashboard" />
+  }
+  // thisisournewadmin
+  const submitHandler = (e) => {
+    e.preventDefault()
+    adminLogin('Admin logging in...', password.value).then(() => {
+      navigate('/admin/dashboard')
+    })
+  }
 
   return (
     <div style={{ backgroundColor: secondary, overflow: 'auto' }}>
@@ -53,7 +95,13 @@ const AdminLogin = () => {
               fullWidth
               margin="normal"
               color="primary"
-              sx={{ marginTop: 2 }}
+              sx={{
+                marginTop: 2,
+                bgcolor: primary,
+                '&:hover': { bgcolor: primaryDark },
+              }}
+              disabled={isAdminLoginLoading}
+              type="submit"
             >
               Login
             </Button>

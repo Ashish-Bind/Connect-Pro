@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import AdminLayout from './layout/AdminLayout'
 import Table from '../../components/Table'
 import { Avatar } from '@mui/material'
+import moment from 'moment'
 import { dashboardData } from '../../constants/data'
+import { useUserStatsQuery } from '../../redux/query/api'
 
 const columns = [
   {
@@ -53,11 +55,20 @@ const columns = [
 ]
 
 const UserManagement = () => {
+  const { data } = useUserStatsQuery()
   const [rows, setRows] = useState([])
 
+  const { users } = data || []
+
   useEffect(() => {
-    setRows(dashboardData.users.map((user) => ({ ...user, id: user._id })))
-  })
+    setRows(
+      users?.map((user) => ({
+        ...user,
+        id: user._id,
+        joined: moment(user.joined).fromNow(),
+      }))
+    )
+  }, [data])
 
   return (
     <AdminLayout>

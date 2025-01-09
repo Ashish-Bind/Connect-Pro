@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken'
 
 export const verifyAdmin = trycatch(async (req, res, next) => {
   const { secret } = req.body
-  console.log('called')
 
   const isAdmin = secret === process.env.ADMIN_SECRET
 
@@ -47,7 +46,7 @@ export const allUsers = trycatch(async (req, res, next) => {
   const users = await User.find({})
 
   const transformedUsers = await Promise.all(
-    users.map(async ({ name, username, avatar, _id }) => {
+    users.map(async ({ name, username, avatar, _id, createdAt: joined }) => {
       const [groups, friends] = await Promise.all([
         Chat.countDocuments({ groupChat: true, members: _id }),
         Chat.countDocuments({ groupChat: false, members: _id }),
@@ -60,6 +59,7 @@ export const allUsers = trycatch(async (req, res, next) => {
         _id,
         groups,
         friends,
+        joined,
       }
     })
   )
@@ -76,27 +76,30 @@ export const allChats = trycatch(async (req, res, next) => {
     .populate('creator', 'name avatar')
 
   const transformedChats = await Promise.all(
-    chats.map(async ({ members, _id, groupChat, name, creator }) => {
-      const totalMessages = await Message.countDocuments({ chat: _id })
+    chats.map(
+      async ({ members, _id, groupChat, name, creator, groupAvatar }) => {
+        const totalMessages = await Message.countDocuments({ chat: _id })
 
-      return {
-        _id,
-        groupChat,
-        name,
-        avatar: members.slice(0, 3).map((member) => member.avatar.url),
-        members: members.map(({ _id, name, avatar }) => ({
+        return {
           _id,
+          groupChat,
           name,
-          avatar: avatar.url,
-        })),
-        creator: {
-          name: creator?.name || 'None',
-          avatar: creator?.avatar.url || '',
-        },
-        totalMembers: members.length,
-        totalMessages,
+          avatar: members.slice(0, 3).map((member) => member.avatar.url),
+          members: members.map(({ _id, name, avatar }) => ({
+            _id,
+            name,
+            avatar: avatar.url,
+          })),
+          creator: {
+            name: creator?.name || 'None',
+            avatar: creator?.avatar.url || '',
+          },
+          totalMembers: members.length,
+          totalMessages,
+          groupAvatar: groupChat ? groupAvatar.url : '',
+        }
       }
-    })
+    )
   )
 
   return res.status(200).json({
@@ -147,5 +150,11 @@ export const getDashboardStats = trycatch(async (req, res, next) => {
   return res.status(200).json({
     status: 'success',
     stats,
+  })
+})
+
+export const getAdminData = trycatch(async (req, res, next) => {
+  return res.status(200).json({
+    admin: true,
   })
 })

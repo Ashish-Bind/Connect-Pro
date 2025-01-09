@@ -5,6 +5,7 @@ import { Avatar, Stack } from '@mui/material'
 import { dashboardData } from '../../constants/data'
 import AvatarCard from '../../components/AvatarCard'
 import { transformImage } from '../../libs/features'
+import { useChatStatsQuery } from '../../redux/query/api'
 
 const columns = [
   {
@@ -44,7 +45,7 @@ const columns = [
     field: 'members',
     headerName: 'Members',
     headerClassName: 'table-header',
-    width: 400,
+    width: 200,
     renderCell: (params) => (
       <AvatarCard max={100} avatar={params.row.members} />
     ),
@@ -70,14 +71,19 @@ const columns = [
 ]
 
 const ChatManagement = () => {
+  const { data } = useChatStatsQuery()
   const [rows, setRows] = useState([])
+
+  const { chats } = data || []
 
   useEffect(() => {
     setRows(
-      dashboardData.chats.map((i) => ({
+      chats?.map((i) => ({
         ...i,
         id: i._id,
-        avatar: i.avatar.map((i) => transformImage(i, 50)),
+        avatar: i.groupChat
+          ? [i.groupAvatar]
+          : i.avatar.map((i) => transformImage(i, 50)),
         members: i.members.map((i) => transformImage(i.avatar, 50)),
         creator: {
           name: i.creator.name,
