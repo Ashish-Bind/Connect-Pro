@@ -1,32 +1,41 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable react/display-name */
-import { useParams } from 'react-router-dom'
-import ChatList from '../ChatList'
-import Title from '../Title'
-import Header from './Header'
 import { Drawer, Grid2, Skeleton } from '@mui/material'
-import Profile from '../ProfileCard'
-import { secondary, tertiary } from '../../constants/color'
-import { useGetChatsQuery } from '../../redux/query/api'
+import { useCallback, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
-import { setIsMobile } from '../../redux/reducer/misc'
+import { useNavigate, useParams } from 'react-router-dom'
+import { secondary, tertiary } from '../../constants/color'
+import {
+  NAVIGATE_TO,
+  NEW_MESSAGE_ALERT,
+  NEW_REQUEST,
+  ONLINE_USERS,
+  REFETCH_CHATS,
+} from '../../constants/events'
 import { useErrors, useSocketEvents } from '../../hooks/customHooks'
-import { useSocket } from '../../utils/socket'
-import { NEW_MESSAGE_ALERT, NEW_REQUEST } from '../../constants/events'
-import { useCallback, useEffect } from 'react'
+import { getOrSaveFromStorage } from '../../libs/features'
+import { useGetChatsQuery } from '../../redux/query/api'
 import {
   incrementNotification,
   setNewMessagesAlert,
 } from '../../redux/reducer/chat'
-import { getOrSaveFromStorage } from '../../libs/features'
-import ChatItem from '../ChatItem'
+import { setIsMobile } from '../../redux/reducer/misc'
+import { useSocket } from '../../utils/socket'
+import ChatList from '../ChatList'
+import Profile from '../ProfileCard'
+import Title from '../Title'
+import Header from './Header'
 
 const AppLayout = () => (WrappedComponent) => {
   return (props) => {
+    const [onlineUsers, setOnlineUsers] = useState([])
     const { isMobile } = useSelector((state) => state.misc)
     const { newMessagesAlert } = useSelector((state) => state.chat)
+    const { user } = useSelector((state) => state.auth)
     const params = useParams()
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const chatId = params.id
 
     const socket = useSocket()
@@ -52,7 +61,7 @@ const AppLayout = () => (WrappedComponent) => {
       dispatch(setIsMobile(false))
     }
 
-    const newMessageAlertHandler = useCallback(
+    const newMessageAlertListener = useCallback(
       (data) => {
         if (data.chatId === chatId) return
         dispatch(setNewMessagesAlert(data))
@@ -61,16 +70,41 @@ const AppLayout = () => (WrappedComponent) => {
       [chatId]
     )
 
-    const newRequestHandler = useCallback(
+    const newRequestListener = useCallback(
       (data) => {
         dispatch(incrementNotification())
       },
       [dispatch]
     )
 
+    const refetchListener = useCallback(() => {
+      refetch()
+    }, [refetch])
+
+    const navigateToListener = useCallback(
+      (data) => {
+        navigate('/')
+        if (data) {
+          toast.error(data)
+        }
+      },
+      [navigate]
+    )
+
+    const onlineUserListener = useCallback(
+      (data) => {
+        console.log(data)
+        setOnlineUsers(data)
+      },
+      [data]
+    )
+
     const events = {
-      [NEW_MESSAGE_ALERT]: newMessageAlertHandler,
-      [NEW_REQUEST]: newRequestHandler,
+      [NEW_MESSAGE_ALERT]: newMessageAlertListener,
+      [NEW_REQUEST]: newRequestListener,
+      [REFETCH_CHATS]: refetchListener,
+      [NAVIGATE_TO]: navigateToListener,
+      [ONLINE_USERS]: onlineUserListener,
     }
 
     useSocketEvents(socket, events)
@@ -88,7 +122,7 @@ const AppLayout = () => (WrappedComponent) => {
               w="70vw"
               chats={data.chats}
               chatId={chatId}
-              onlineUsers={[1, 2]}
+              onlineUsers={onlineUsers}
               newMessageAlert={newMessagesAlert}
               handleDeleteChat={handleDeleteChat}
             />
@@ -110,7 +144,7 @@ const AppLayout = () => (WrappedComponent) => {
               <ChatList
                 chats={data.chats}
                 chatId={chatId}
-                onlineUsers={[1, 2]}
+                onlineUsers={onlineUsers}
                 newMessageAlert={newMessagesAlert}
                 handleDeleteChat={handleDeleteChat}
               />

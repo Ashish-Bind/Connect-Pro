@@ -23,7 +23,7 @@ const ChatManagement = lazy(() => import('./pages/admin/ChatManagement.jsx'))
 const UserManagement = lazy(() => import('./pages/admin/UserManagement.jsx'))
 
 function App() {
-  const { user, isLoading } = useSelector((state) => state.auth)
+  const { user, isLoading, isAdmin } = useSelector((state) => state.auth)
   const dispatch = useDispatch()
 
   useEffect(() => {

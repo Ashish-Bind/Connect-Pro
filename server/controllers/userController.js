@@ -219,15 +219,16 @@ export const getAllFriends = trycatch(async (req, res, next) => {
   const chats = await Chat.find({
     members: req.user._id,
     groupChat: false,
-  }).populate('members', 'name avatar')
+  }).populate('members', 'name avatar username')
 
   const friends = chats.map(({ members }) => {
-    const otherUser = getOtherMember(members, req.user)
+    const otherUser = getOtherMember({ members, userId: req.user._id })
 
     return {
       _id: otherUser._id,
       name: otherUser.name,
-      avatar: otherUser.avatar.url,
+      avatar: otherUser.avatar,
+      username: otherUser.username,
     }
   })
 

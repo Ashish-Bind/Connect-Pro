@@ -1,6 +1,7 @@
 import express from 'express'
 import {
   acceptFriendRequest,
+  getAllFriends,
   getAllNotifications,
   getUserProfile,
   login,
@@ -48,5 +49,6 @@ router.put(
   acceptFriendRequest
 )
 router.get('/all-notifications', getAllNotifications)
+router.get('/all-friends', getAllFriends)
 
 export default router

@@ -3,6 +3,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material'
 import { Link } from './styles/StyledComponent'
 import React from 'react'
 import { mattBlack, primaryDark, primaryDarkest } from '../constants/color'
+import { motion } from 'framer-motion'
 
 const ChatItem = ({
   avatar,
@@ -10,6 +11,7 @@ const ChatItem = ({
   _id,
   username,
   groupChat = false,
+  groupAvatar,
   sameSender,
   isOnline,
   newMessageAlert,
@@ -25,7 +27,10 @@ const ChatItem = ({
         padding: 0,
       }}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: '-100%' }}
+        whileInView={{ opacity: 1, y: '0' }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -36,26 +41,35 @@ const ChatItem = ({
           color: sameSender ? 'black' : 'unset',
         }}
       >
-        <Avatar
-          src={avatar ? avatar : ''}
-          sx={{
-            width: '3rem',
-            height: '3rem',
-          }}
-        />
+        {groupChat ? (
+          <Avatar
+            src={groupAvatar && groupAvatar.url}
+            sx={{ width: '3rem', height: '3rem' }}
+          />
+        ) : (
+          <Avatar
+            src={avatar ? avatar : ''}
+            sx={{
+              width: '3rem',
+              height: '3rem',
+            }}
+          />
+        )}
         <Stack>
           <Typography
             sx={{
-              fontFamily: 'Open Sans',
+              fontFamily: 'Nunito Sans',
               fontWeight: 'bold',
               color: primaryDarkest,
             }}
           >
             {name}
           </Typography>
-          <Typography variant="caption" color={mattBlack}>
-            @{username}
-          </Typography>
+          {
+            <Typography variant="caption" color={mattBlack}>
+              @{groupChat ? 'group' : username}
+            </Typography>
+          }
 
           {newMessageAlert && newMessageAlert.count > 0 && (
             <Typography
@@ -67,14 +81,13 @@ const ChatItem = ({
               {newMessageAlert.count} new message
             </Typography>
           )}
-
-          {isOnline && (
+          {!groupChat && (
             <Box
               sx={{
-                width: '10px',
-                height: '10px',
+                width: '8px',
+                height: '8px',
                 borderRadius: '50%',
-                backgroundColor: 'green',
+                backgroundColor: isOnline ? '#AAFF00' : '#CCC',
                 position: 'absolute',
                 top: '50%',
                 right: '1rem',
@@ -83,7 +96,7 @@ const ChatItem = ({
             ></Box>
           )}
         </Stack>
-      </div>
+      </motion.div>
     </Link>
   )
 }

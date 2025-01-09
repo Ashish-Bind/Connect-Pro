@@ -75,7 +75,7 @@ const Search = () => {
         />
       </Stack>
 
-      <List sx={{ overflow: 'auto', height: '100%' }}>
+      <List sx={{ overflow: 'auto', height: '25rem' }}>
         {users.map((user) => (
           <UserItem
             key={user._id}

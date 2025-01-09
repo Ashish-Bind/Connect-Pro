@@ -28,16 +28,22 @@ const router = express.Router()
 // Authenticated Routes
 router.use(isAuthenticated)
 
-router.post('/new-group', newGroupValidator(), validateHandler, newGroupChat)
+router.post(
+  '/new-group',
+  upload.single('groupAvatar'),
+  newGroupValidator(),
+  validateHandler,
+  newGroupChat
+)
 router.get('/all-chats', getUserChats)
 router.get('/all-group-chats', getUserGroupChats)
-router.post(
+router.put(
   '/add-new-member',
   addMemberValidator(),
   validateHandler,
   addNewMembers
 )
-router.post(
+router.put(
   '/remove-member',
   removeMemberValidator(),
   validateHandler,

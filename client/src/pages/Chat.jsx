@@ -4,7 +4,7 @@ import {
   Send as SendIcon,
 } from '@mui/icons-material'
 import { IconButton, Skeleton, Stack } from '@mui/material'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import AppLayout from '../components/layout/AppLayout'
 import Message from '../components/MessageComponent'
@@ -12,6 +12,8 @@ import { InputBox } from '../components/styles/StyledComponent'
 import { gray, primary, primaryDark } from '../constants/color'
 import {
   ALERT,
+  CHAT_JOINED,
+  CHAT_LEFT,
   END_TYPING,
   NEW_MESSAGE,
   START_TYPING,
@@ -29,9 +31,12 @@ import { TypingLoader } from '../components/layout/Loaders'
 import { FLASK_SERVER } from '../constants/config'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import { memberExists } from '../redux/reducer/auth'
 
 const Chat = ({ chatId }) => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const containerRef = useRef(null)
   const [message, setMessage] = useState('')
@@ -57,6 +62,8 @@ const Chat = ({ chatId }) => {
     chatId,
     populate: true,
   })
+
+  const members = chatDetails?.data?.chat?.members.map((i) => i._id)
 
   const oldMessagesChunk = useGetOldMessagesQuery({ chatId, page })
 
@@ -108,32 +115,56 @@ const Chat = ({ chatId }) => {
     e.preventDefault()
     if (!message) return
 
-    axios
-      .post(`${FLASK_SERVER}/api/v2/process-message`, { message: message })
-      .then((res) => {
-        const members = chatDetails?.data?.chat?.members.map((i) => i._id)
-        if (res?.data?.isSlangReplaced) {
-          setMessages((prev) => [...prev, res.data.message])
-          socket.emit(NEW_MESSAGE, {
-            message: res.data.message,
-            members,
-            chatId,
-          })
-        } else {
-          socket.emit(NEW_MESSAGE, {
-            message,
-            members,
-            chatId,
-          })
-        }
-      })
-      .catch((err) => {
-        setIsHateSpeech(true)
-        toast.error(err?.response?.data?.message)
-      })
+    socket.emit(NEW_MESSAGE, {
+      message,
+      members,
+      chatId,
+    })
+
+    // axios
+    //   .post(`${FLASK_SERVER}/api/v2/process-message`, { message: message })
+    //   .then((res) => {
+    //     const members = chatDetails?.data?.chat?.members.map((i) => i._id)
+    //     if (res?.data?.isSlangReplaced) {
+    //       toast('Slang word detected. Message has been replaced', {
+    //         icon: '🚫',
+    //       })
+    //       socket.emit(NEW_MESSAGE, {
+    //         message: res.data.message,
+    //         members,
+    //         chatId,
+    //       })
+    //     } else {
+    //       socket.emit(NEW_MESSAGE, {
+    //         message,
+    //         members,
+    //         chatId,
+    //       })
+    //     }
+    // })
+    //   .catch((err) => {
+    //     setIsHateSpeech(true)
+    //     toast.error(err?.response?.data?.message)
+    //   })
 
     setMessage('')
   }
+
+  useEffect(() => {
+    if (chatDetails?.data?.chat?.members) {
+      const otherMember = chatDetails?.data?.chat?.members.find(
+        (i) => i._id !== user._id
+      )
+
+      if (chatDetails?.data?.chat?.groupChat) {
+        dispatch(memberExists(chatDetails.data?.chat))
+      } else {
+        dispatch(
+          memberExists({ ...otherMember, _id: chatDetails.data.chat._id })
+        )
+      }
+    }
+  }, [chatDetails])
 
   useEffect(() => {
     if (bottomRef.current) {
@@ -142,19 +173,24 @@ const Chat = ({ chatId }) => {
   }, [messages])
 
   useEffect(() => {
+    socket.emit(CHAT_JOINED, { userId: user._id, members })
     dispatch(removeNewMessagesAlert(chatId))
+
     return () => {
       setMessages([])
       setMessage('')
       setPage(1)
       setOldMessages([])
+      socket.emit(CHAT_LEFT, { userId: user._id, members })
     }
   }, [chatId])
 
-  const newMessageHandler = useCallback(
+  const newMessageListener = useCallback(
     (data) => {
       if (data.chat !== chatId) return
+      console.log(data)
       setMessages((prev) => [...prev, data])
+      console.log(messages)
     },
     [chatId]
   )
@@ -177,8 +213,9 @@ const Chat = ({ chatId }) => {
 
   const alertListener = useCallback(
     (data) => {
+      if (chatId !== data.chat) return
       const messageAlert = {
-        content: data,
+        content: data.message,
         sender: {
           _id: 'asdfljofhiagn',
           name: 'Admin',
@@ -193,7 +230,7 @@ const Chat = ({ chatId }) => {
   )
 
   const events = {
-    [NEW_MESSAGE]: newMessageHandler,
+    [NEW_MESSAGE]: newMessageListener,
     [START_TYPING]: startTypingListener,
     [END_TYPING]: endTypingListener,
     [ALERT]: alertListener,
@@ -238,7 +275,7 @@ const Chat = ({ chatId }) => {
           </IconButton>
           <InputBox
             placeholder="Type a message..."
-            sx={{ fontFamily: 'Open Sans' }}
+            sx={{ fontFamily: 'Nunito Sans' }}
             value={message}
             onChange={messageHandler}
           />
@@ -263,7 +300,7 @@ const Chat = ({ chatId }) => {
   )
 }
 
-const WrappedChat = React.memo(AppLayout()(Chat), () => true)
+const WrappedChat = memo(AppLayout()(Chat), () => true)
 WrappedChat.displayName = 'WrappedChat' // add a display name
 
 export default WrappedChat

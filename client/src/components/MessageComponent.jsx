@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 import { Box, Typography } from '@mui/material'
 import moment from 'moment'
-import React from 'react'
 import { primary } from '../constants/color'
 import { fileFormat } from '../libs/features'
 import RenderAttachment from './RenderAttachment'
+import { motion } from 'framer-motion'
 
 const Message = ({ message, user }) => {
   const { sender, content, attachments = [], createdAt } = message
@@ -14,7 +14,9 @@ const Message = ({ message, user }) => {
   const timeago = moment(createdAt).fromNow()
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: '-100%' }}
+      whileInView={{ opacity: 1, x: '0' }}
       style={{
         alignSelf: sameSender ? 'flex-end' : 'flex-start',
         backgroundColor: 'white',
@@ -26,7 +28,7 @@ const Message = ({ message, user }) => {
     >
       {
         <Typography color={primary} fontWeight={'600'} variant="caption">
-          {!sameSender ? sender?.name : 'You  '}
+          {!sameSender ? sender?.name : 'You'}
         </Typography>
       }
       {content && <Typography>{content}</Typography>}
@@ -55,7 +57,7 @@ const Message = ({ message, user }) => {
       <Typography variant="caption" color="text.secondary">
         {timeago}
       </Typography>
-    </div>
+    </motion.div>
   )
 }
 

@@ -15,11 +15,6 @@ export const loginValidator = () => [
 
 export const newGroupValidator = () => [
   body('name', 'Please Enter Name').notEmpty(),
-  body('members')
-    .notEmpty()
-    .withMessage('Please Enter Members')
-    .isArray({ min: 2, max: 100 })
-    .withMessage('Members must be 2-100'),
 ]
 
 export const addMemberValidator = () => [

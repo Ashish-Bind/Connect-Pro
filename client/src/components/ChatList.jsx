@@ -2,6 +2,7 @@
 import { Stack } from '@mui/material'
 import React from 'react'
 import ChatItem from './ChatItem'
+import { useSelector } from 'react-redux'
 
 const ChatList = ({
   w = '100%',
@@ -16,6 +17,9 @@ const ChatList = ({
   ],
   handleDeleteChat,
 }) => {
+  const { user } = useSelector((state) => state.auth)
+  console.log(chats)
+
   return (
     <Stack
       width={w}
@@ -23,14 +27,25 @@ const ChatList = ({
       sx={{ overflow: 'auto', height: '100%' }}
     >
       {chats?.map((chat, index) => {
-        const { _id, name, groupChat, avatar, members, username } = chat
+        const {
+          _id,
+          name,
+          groupChat,
+          avatar,
+          members,
+          username,
+          groupAvatar,
+          otherMember,
+        } = chat
 
         const newMessageAlerts = newMessageAlert.find(
           ({ chatId }) => chatId === _id
         )
         const sameSender = chatId === _id
 
-        const isOnline = members?.some((member) => onlineUsers.includes(member))
+        console.log(members)
+
+        const isOnline = !groupChat && onlineUsers.includes(otherMember)
 
         return (
           <ChatItem
@@ -42,6 +57,7 @@ const ChatList = ({
             name={name}
             avatar={avatar}
             groupChat={groupChat}
+            groupAvatar={groupAvatar}
             sameSender={sameSender}
             username={username}
             members={members}
@@ -50,7 +66,7 @@ const ChatList = ({
         )
       })}
 
-      <Stack sx={{ marginTop: 'auto' }}>
+      {/* <Stack sx={{ marginTop: 'auto' }}>
         <ChatItem
           index={1}
           key={1}
@@ -63,7 +79,7 @@ const ChatList = ({
           members={[]}
           customUrl="/ai-chat"
         />
-      </Stack>
+      </Stack> */}
     </Stack>
   )
 }

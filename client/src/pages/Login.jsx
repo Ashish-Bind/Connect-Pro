@@ -13,17 +13,20 @@ import { VisuallyHiddenInput } from '../components/styles/StyledComponent'
 import { CameraAlt } from '@mui/icons-material'
 import { useFileHandler, useInputValidation, useStrongPassword } from '6pp'
 import { usernameValidator } from '../utils/validators'
-import { secondary } from '../constants/color'
+import { primary, primaryDark, secondary } from '../constants/color'
 import axios from 'axios'
 import { SERVER } from '../constants/config'
 import { useDispatch } from 'react-redux'
 import { userExists } from '../redux/reducer/auth'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const [isLogin, setIsLogin] = React.useState(true)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   const toggleLogin = () => {
     setIsLogin(!isLogin)
@@ -38,6 +41,8 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    const toastId = toast.loading('Logging in...')
+    setIsLoading(true)
 
     const options = {
       withCredentials: true,
@@ -58,15 +63,22 @@ const Login = () => {
         options
       )
 
-      dispatch(userExists(true))
-      toast.success(data.message)
+      dispatch(userExists(data.user))
+      toast.success(data.message, { id: toastId })
+      navigate('/')
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Something went wrong')
+      toast.error(error?.response?.data?.message || 'Something went wrong', {
+        id: toastId,
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleRegister = async (e) => {
     e.preventDefault()
+    const toastId = toast.loading('Creating new user...')
+    setIsLoading(true)
     const options = {
       withCredentials: true,
       headers: {
@@ -88,10 +100,16 @@ const Login = () => {
         formdata,
         options
       )
-      toast.success(data.message)
+      toast.success(data.message, { id: toastId })
+      dispatch(userExists(data.user))
+      navigate('/')
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Something went wrong')
+      toast.error(error?.response?.data?.message || 'Something went wrong', {
+        id: toastId,
+      })
       console.log(error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -160,8 +178,13 @@ const Login = () => {
                   fullWidth
                   margin="normal"
                   color="primary"
-                  sx={{ marginTop: 2 }}
+                  sx={{
+                    marginTop: 2,
+                    bgcolor: primary,
+                    '&:hover': { bgcolor: primaryDark },
+                  }}
                   type="submit"
+                  disabled={isLoading}
                 >
                   Login
                 </Button>
@@ -178,6 +201,8 @@ const Login = () => {
                   variant="text"
                   fullWidth
                   onClick={toggleLogin}
+                  sx={{ color: primary, '&:hover': { color: primaryDark } }}
+                  disabled={isLoading}
                 >
                   {isLogin ? 'Sign up' : 'Login'} instead
                 </Button>
@@ -281,8 +306,13 @@ const Login = () => {
                   fullWidth
                   margin="normal"
                   color="primary"
-                  sx={{ marginTop: 2 }}
+                  sx={{
+                    marginTop: 2,
+                    bgcolor: primary,
+                    '&:hover': { bgcolor: primaryDark },
+                  }}
                   type="submit"
+                  disabled={isLoading}
                 >
                   Sign up
                 </Button>
@@ -299,6 +329,8 @@ const Login = () => {
                   variant="text"
                   fullWidth
                   onClick={toggleLogin}
+                  disabled={isLoading}
+                  sx={{ color: primary, '&:hover': { color: primaryDark } }}
                 >
                   {isLogin ? 'Sign up' : 'Login'} instead
                 </Button>

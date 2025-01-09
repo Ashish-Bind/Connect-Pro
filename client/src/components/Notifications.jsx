@@ -11,9 +11,8 @@ import {
   Typography,
 } from '@mui/material'
 import React from 'react'
-import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
-import { useErrors } from '../hooks/customHooks'
+import { useAsyncMutation, useErrors } from '../hooks/customHooks'
 import {
   useAcceptFriendRequestMutation,
   useGetNotificationsQuery,
@@ -25,22 +24,14 @@ const Notifications = () => {
 
   const { isNotification } = useSelector((state) => state.misc)
   const { data, isLoading, isError, error } = useGetNotificationsQuery('')
-  const [acceptFriendRequest] = useAcceptFriendRequestMutation()
+  const [acceptFriendRequest] = useAsyncMutation(useAcceptFriendRequestMutation)
 
   const friendRequestHandler = async ({ _id, accept }) => {
-    try {
-      const res = await acceptFriendRequest({ requestId: _id, accept })
-      console.log(res)
-      if (res.data?.success) {
-        console.log('use socket')
-        toast.success(res.data.message)
-      } else {
-        toast.error(res?.error.message || 'Something went wrong')
-      }
-    } catch (error) {
-      toast.error('Something went wrong')
-      console.log(error)
-    }
+    dispatch(setIsNotification(false))
+    await acceptFriendRequest('Accepting Request...', {
+      requestId: _id,
+      accept,
+    })
   }
 
   useErrors([{ isError, error }])

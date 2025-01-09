@@ -27,10 +27,12 @@ import { SERVER } from '../../constants/config'
 import { userNotExists } from '../../redux/reducer/auth'
 import {
   setIsMobile,
+  setIsNewGroup,
   setIsNotification,
   setIsSearch,
 } from '../../redux/reducer/misc'
 import ConfirmDialog from '../dialogs/ConfirmDialog'
+import { resetNotificationCount } from '../../redux/reducer/chat'
 
 const SearchDialog = lazy(() => import('../Search'))
 const NotificationsDialog = lazy(() => import('../Notifications'))
@@ -40,12 +42,11 @@ const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  const { isMobile, isSearch, isNotification } = useSelector(
+  const { isMobile, isSearch, isNotification, isNewGroup } = useSelector(
     (state) => state.misc
   )
   const { notificationCount } = useSelector((state) => state.chat)
 
-  const [isNewGroupOpen, setIsNewGroupOpen] = useState(false)
   const [isLogoutOpen, setIsLogoutOpen] = useState(false)
 
   const handleMobileOpen = () => {
@@ -56,8 +57,8 @@ const Header = () => {
     dispatch(setIsSearch(true))
   }
 
-  const addGroup = () => {
-    setIsNewGroupOpen(!isNewGroupOpen)
+  const handleNewGroupOpen = () => {
+    dispatch(setIsNewGroup(true))
   }
 
   const openGroup = () => {
@@ -66,6 +67,7 @@ const Header = () => {
 
   const handleNotificationOpen = () => {
     dispatch(setIsNotification(true))
+    dispatch(resetNotificationCount(0))
   }
 
   const handleLogout = () => {
@@ -114,7 +116,7 @@ const Header = () => {
                 </IconButton>
 
                 <Tooltip title="New Group">
-                  <IconButton color="inherit" onClick={addGroup}>
+                  <IconButton color="inherit" onClick={handleNewGroupOpen}>
                     <AddIcon />
                   </IconButton>
                 </Tooltip>
@@ -154,7 +156,7 @@ const Header = () => {
         </Suspense>
       )}
 
-      {isNewGroupOpen && (
+      {isNewGroup && (
         <Suspense fallback={<Backdrop open />}>
           <NewGroupDialog />
         </Suspense>

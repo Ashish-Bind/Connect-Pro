@@ -1,19 +1,48 @@
 import {
-  CameraAlt,
-  Face as FaceIcon,
-  AlternateEmail as EmailIcon,
   CalendarMonth as CalendarIcon,
-  Face,
+  CameraAlt,
+  Delete as DeleteIcon,
+  AlternateEmail as EmailIcon,
+  Face as FaceIcon,
+  Group as GroupIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material'
-import { Avatar, Stack, Typography } from '@mui/material'
+import { Avatar, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import { motion } from 'framer-motion'
 import moment from 'moment'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { primary, primaryDark } from '../constants/color'
+import { useAsyncMutation } from '../hooks/customHooks'
+import { useDeleteChatMutation } from '../redux/query/api'
+import { setIsDeleteMenu } from '../redux/reducer/misc'
+import ConfirmDialog from './dialogs/ConfirmDialog'
 
 const Profile = () => {
-  const { user } = useSelector((state) => state.auth)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  return (
+  const { user, member } = useSelector((state) => state.auth)
+  const { isDeleteMenu } = useSelector((state) => state.misc)
+  const location = useLocation()
+
+  const isHome = location.pathname === '/'
+
+  const [deleteChat, isDeleteChatLoading] = useAsyncMutation(
+    useDeleteChatMutation
+  )
+
+  const openDeleteChatMenu = () => {
+    dispatch(setIsDeleteMenu(true))
+  }
+
+  const handleDeleteChat = () => {
+    deleteChat('Deleting Chat...', member?._id)
+    dispatch(setIsDeleteMenu(false))
+    navigate('/')
+  }
+
+  return member?.groupChat && !isHome ? (
     <Stack
       spacing={'2rem'}
       direction={'column'}
@@ -25,47 +54,138 @@ const Profile = () => {
           width: '10rem',
           height: '10rem',
           objectFit: 'contain',
-          border: '2px solid black',
+          border: `5px solid ${primary}`,
           marginBottom: '1rem',
         }}
-        src={user?.avatar?.url}
+        src={member.groupAvatar.url}
       />
-      <ProfileCard text={'Bio'} Icon={<CameraAlt />} heading={user?.bio} />
+      <ProfileCard
+        text={'Group Name'}
+        Icon={<GroupIcon />}
+        heading={isHome ? user?.name : member?.name}
+      />
+      <ProfileCard
+        text={'Created'}
+        Icon={<CalendarIcon />}
+        heading={moment(isHome ? user?.createdAt : member?.createdAt).fromNow()}
+      />
+      <Typography variant="body1" color="gray">
+        {member.members.length} Members
+      </Typography>
+      <Stack
+        spacing={'1rem'}
+        alignItems={'center'}
+        sx={{
+          width: '100%',
+          height: '80%',
+          overflowY: 'scroll',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {member.members.map((i) => (
+          <ProfileCard
+            key={i._id}
+            text={''}
+            Icon={<PersonIcon />}
+            heading={isHome ? user?.name : i?.name}
+          />
+        ))}
+      </Stack>
+    </Stack>
+  ) : (
+    <Stack
+      spacing={'2rem'}
+      direction={'column'}
+      alignItems={'center'}
+      sx={{ padding: '1rem' }}
+    >
+      <Avatar
+        sx={{
+          width: '10rem',
+          height: '10rem',
+          objectFit: 'contain',
+          border: `5px solid ${primary}`,
+          marginBottom: '1rem',
+        }}
+        src={isHome ? user?.avatar?.url : member?.avatar}
+      />
+      <ProfileCard
+        text={'Bio'}
+        Icon={<CameraAlt />}
+        index={1}
+        heading={isHome ? user?.bio : member?.bio}
+      />
       <ProfileCard
         text={'Username'}
         Icon={<EmailIcon />}
-        heading={user.username}
+        index={2}
+        heading={isHome ? user?.username : member?.username}
       />
-      <ProfileCard text={'Name'} Icon={<FaceIcon />} heading={user?.name} />
+      <ProfileCard
+        text={'Name'}
+        Icon={<FaceIcon />}
+        index={3}
+        heading={isHome ? user?.name : member?.name}
+      />
       <ProfileCard
         text={'Joined'}
         Icon={<CalendarIcon />}
-        heading={moment(user?.createdAt).fromNow()}
+        index={4}
+        heading={moment(isHome ? user?.createdAt : member?.createdAt).fromNow()}
+      />
+      {!isHome && (
+        <Tooltip title="Delete Chat">
+          <IconButton
+            onClick={openDeleteChatMenu}
+            sx={{
+              marginTop: 2,
+              bgcolor: primary,
+              color: 'white',
+              '&:hover': { bgcolor: primaryDark },
+            }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      <ConfirmDialog
+        description={'Are you sure you want to delete this chat?'}
+        open={isDeleteMenu}
+        handleClose={() => dispatch(setIsDeleteMenu(false))}
+        title={'Delete Chat'}
+        deleteHandler={handleDeleteChat}
       />
     </Stack>
   )
 }
 
-const ProfileCard = ({ text, Icon, heading }) => {
+const ProfileCard = ({ text, Icon, heading, index }) => {
   return (
-    <Stack
-      direction={'row'}
-      alignItems={'center'}
-      spacing={'1rem'}
-      color={'black'}
-      textAlign={'center'}
+    <motion.div
+      initial={{ opacity: 0, y: '-100%' }}
+      whileInView={{ opacity: 1, y: '0' }}
+      transition={{ duration: 0.5, delay: index * 0.2 }}
     >
-      {Icon && Icon}
+      <Stack
+        direction={'row'}
+        alignItems={'center'}
+        spacing={'1rem'}
+        color={'black'}
+        textAlign={'center'}
+      >
+        {Icon && Icon}
 
-      <Stack>
-        <Typography variant="body1" fontWeight={'bold'} color={primaryDark}>
-          {heading}
-        </Typography>
-        <Typography variant="caption" color="gray">
-          {text}
-        </Typography>
+        <Stack>
+          <Typography variant="body1" fontWeight={'bold'} color={primaryDark}>
+            {heading}
+          </Typography>
+          <Typography variant="body2" color="gray">
+            {text}
+          </Typography>
+        </Stack>
       </Stack>
-    </Stack>
+    </motion.div>
   )
 }
 

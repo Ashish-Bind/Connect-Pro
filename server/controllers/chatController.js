@@ -1,5 +1,6 @@
 import {
   ALERT,
+  NAVIGATE_TO,
   NEW_MESSAGE,
   NEW_MESSAGE_ALERT,
   REFETCH_CHATS,
@@ -16,33 +17,46 @@ import {
   uploadFilesToCloudinary,
 } from '../utils/features.js'
 
-export const newGroupChat = trycatch(async (req, res, next) => {
-  const { name, members, groupAvatar } = req.body
+export const newGroupChat = async (req, res, next) => {
+  const { name, members } = req.body
+  let groupAvatar = null
 
-  //Todo: Add group avatar
+  const file = req.file
 
-  if (members.length < 2) {
+  if (file) {
+    const result = await uploadFilesToCloudinary([file])
+
+    groupAvatar = {
+      public_id: result[0].public_id,
+      url: result[0].url,
+    }
+  }
+
+  if (JSON.parse(members).length < 2) {
     return next(new ErrorHandler('Please add at least 2 members', 400))
   }
 
-  const allMembers = [...members, req.user._id]
+  const allMembers = [...JSON.parse(members), req.user._id]
 
   const chat = await Chat.create({
     name,
     members: allMembers,
     creator: req.user._id,
     groupChat: true,
-    groupAvatar,
+    groupAvatar: groupAvatar ? groupAvatar : { public_id: '', url: '' },
   })
 
-  eventEmitter(req, ALERT, allMembers, `Welcome to ${name} group`)
-  eventEmitter(req, REFETCH_CHATS, members, `Welcome to ${name} group`)
+  eventEmitter(req, ALERT, allMembers, {
+    message: `Welcome to ${name} group`,
+    chatId: chat._id,
+  })
+  eventEmitter(req, REFETCH_CHATS, JSON.parse(members))
 
   return res.status(200).json({
     success: true,
     message: 'Group Chat Created Successfully',
   })
-})
+}
 
 export const getUserChats = trycatch(async (req, res, next) => {
   const chats = await Chat.find({
@@ -61,16 +75,18 @@ export const getUserChats = trycatch(async (req, res, next) => {
       // fix: group avatar not working
       return {
         _id,
-        name: groupChat ? name : otherMember[0].name,
-        username: otherMember[0].username,
+        name: groupChat ? name : otherMember.name,
+        username: otherMember.username,
         groupChat,
-        avatar: otherMember[0].avatar.url,
+        avatar: groupChat ? groupAvatar.url : otherMember.avatar.url,
+        groupAvatar: groupChat && groupAvatar,
         members: members.reduce((prev, curr) => {
           if (curr._id.toString() !== req.user.toString()) {
             prev.push(curr._id)
           }
           return prev
         }, []),
+        otherMember: !groupChat && otherMember._id,
       }
     }
   )
@@ -141,7 +157,10 @@ export const addNewMembers = trycatch(async (req, res, next) => {
 
   const allUsersName = allNewMembers.map((i) => i.name).join(', ')
 
-  eventEmitter(req, ALERT, chat.members, `${allUsersName} added to group`)
+  eventEmitter(req, ALERT, chat.members, {
+    message: `${allUsersName} added to group`,
+    chatId,
+  })
   eventEmitter(req, REFETCH_CHATS, chat.members)
 
   return res.status(200).json({
@@ -181,6 +200,12 @@ export const removeMembers = trycatch(async (req, res, next) => {
   })
 
   eventEmitter(req, REFETCH_CHATS, allChatMembers)
+  eventEmitter(
+    req,
+    NAVIGATE_TO,
+    [userId],
+    'You have been removed from the group'
+  )
 
   return res.status(200).json({
     success: true,
@@ -278,16 +303,21 @@ export const sendAttachments = trycatch(async (req, res, next) => {
 export const getChatDetails = trycatch(async (req, res, next) => {
   if (req.query.populate === 'true') {
     const chat = await Chat.findById(req.params.id)
-      .populate('members', 'name avatar')
+      .populate('members', 'name avatar username bio createdAt')
       .lean()
 
     if (!chat) return next(new ErrorHandler('Chat not found', 404))
 
-    chat.members = chat.members.map(({ _id, name, avatar }) => ({
-      _id,
-      name,
-      avatar: avatar.url,
-    }))
+    chat.members = chat.members.map(
+      ({ _id, name, avatar, username, bio, createdAt }) => ({
+        _id,
+        name,
+        avatar: avatar.url,
+        username,
+        bio,
+        createdAt,
+      })
+    )
 
     return res.status(200).json({
       success: true,
@@ -370,7 +400,17 @@ export const deleteChat = trycatch(async (req, res, next) => {
     Message.deleteMany({ chat: chatId }),
   ])
 
+  const otherMembers = members.filter(
+    (member) => member.toString() !== req.user._id
+  )
+
   eventEmitter(req, REFETCH_CHATS, members)
+  eventEmitter(
+    req,
+    NAVIGATE_TO,
+    otherMembers,
+    'You have been removed from the chat'
+  )
 
   return res.status(200).json({
     success: true,
@@ -381,6 +421,18 @@ export const deleteChat = trycatch(async (req, res, next) => {
 export const getMessages = trycatch(async (req, res, next) => {
   const chatId = req.params.id
   const { page = 1 } = req.query
+
+  const chat = await Chat.findById(chatId)
+
+  if (!chat) {
+    return next(new ErrorHandler('Chat not found', 404))
+  }
+
+  if (!chat.members.includes(req.user._id.toString())) {
+    return next(
+      new ErrorHandler('You are not allowed to access this chat', 403)
+    )
+  }
 
   const limit = 20
 

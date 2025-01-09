@@ -13,9 +13,12 @@ import userRoute from './routes/userRoute.js'
 import adminRoute from './routes/adminRoute.js'
 import { connectToDB, getSockets } from './utils/features.js'
 import {
+  CHAT_JOINED,
+  CHAT_LEFT,
   END_TYPING,
   NEW_MESSAGE,
   NEW_MESSAGE_ALERT,
+  ONLINE_USERS,
   START_TYPING,
 } from './constants/events.js'
 import { Message } from './models/messageModel.js'
@@ -30,6 +33,7 @@ const MONGO_URI = process.env.MONGO_URI
 const PORT = process.env.PORT || 3000
 
 const userSocketMap = new Map()
+const onlineUsers = new Set()
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -70,8 +74,6 @@ io.on('connection', (socket) => {
 
   userSocketMap.set(user._id.toString(), socket.id)
 
-  console.log(userSocketMap)
-
   socket.on(NEW_MESSAGE, async ({ chatId, members, message }) => {
     const messageRT = {
       content: message,
@@ -92,8 +94,6 @@ io.on('connection', (socket) => {
 
     const membersSocket = getSockets(members)
 
-    console.log(messageRT)
-
     io.to(membersSocket).emit(NEW_MESSAGE, { chat: chatId, ...messageRT })
 
     io.to(membersSocket).emit(NEW_MESSAGE_ALERT, { chatId })
@@ -113,6 +113,22 @@ io.on('connection', (socket) => {
   socket.on(END_TYPING, ({ members, chatId }) => {
     const membersSocket = getSockets(members)
     socket.to(membersSocket).emit(END_TYPING, { chatId })
+  })
+
+  socket.on(CHAT_JOINED, ({ userId, members }) => {
+    onlineUsers.add(userId)
+
+    const memberSocket = getSockets(members)
+
+    io.to(memberSocket).emit(ONLINE_USERS, Array.from(onlineUsers))
+  })
+
+  socket.on(CHAT_LEFT, ({ userId, members }) => {
+    onlineUsers.delete(userId)
+
+    const memberSocket = getSockets(members)
+
+    io.to(memberSocket).emit(ONLINE_USERS, Array.from(onlineUsers))
   })
 
   socket.on('disconnect', () => {
