@@ -46,8 +46,8 @@ And for client .env
 Clone this repository git
 
 ```bash
-  git clone https://github.com/Ashish-Bind/Blog-MERN-Stack-Project.git
-  cd Blog-MERN-Stack-Project
+  git clone https://github.com/Ashish-Bind/Connect-Pro/
+  cd Connect-Pro
 ```
 
 Install dependencies from npm
