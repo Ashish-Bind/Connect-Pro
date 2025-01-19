@@ -24,32 +24,29 @@ import { useDashboardStatsQuery } from '../../redux/query/api'
 
 const Appbar = (
   <Paper elevation={3} sx={{ padding: '2rem', margin: '2rem 0' }}>
-    <Stack direction={'row'} alignItems={'center'} spacing={'1rem'}>
-      <AdminPanelSettingsIcon sx={{ fontSize: '3rem' }} />
-
-      <TextField placeholder="Search..." color="black" variant="standard" />
-
-      <Button
-        startIcon={<SearchIcon />}
-        sx={{ backgroundColor: 'black', color: 'white' }}
-        variant="contained"
-        size="large"
-      >
-        Search
-      </Button>
-      <Box flexGrow={1} />
-      <Typography
-        display={{
-          xs: 'none',
-          lg: 'block',
-        }}
-        color={'rgba(0,0,0,0.7)'}
-        textAlign={'center'}
-      >
-        {moment().format('dddd, D MMMM YYYY')}
+    <Stack
+      direction={'row'}
+      alignItems={'center'}
+      justifyContent={'space-between'}
+      spacing={'1rem'}
+    >
+      <Typography variant="h5" textTransform={'uppercase'}>
+        Analytics
       </Typography>
 
-      <NotificationsIcon />
+      <Stack direction={'row'} alignItems={'center'} spacing={'1rem'}>
+        <Typography
+          display={{
+            xs: 'none',
+            lg: 'block',
+          }}
+          color={'rgba(0,0,0,0.7)'}
+          textAlign={'center'}
+        >
+          {moment().format('dddd, D MMMM YYYY')}
+        </Typography>
+        <NotificationsIcon />
+      </Stack>
     </Stack>
   </Paper>
 )

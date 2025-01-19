@@ -115,37 +115,37 @@ const Chat = ({ chatId }) => {
     e.preventDefault()
     if (!message) return
 
-    socket.emit(NEW_MESSAGE, {
+    /* socket.emit(NEW_MESSAGE, {
       message,
       members,
       chatId,
-    })
+    }) */
 
-    // axios
-    //   .post(`${FLASK_SERVER}/api/v2/process-message`, { message: message })
-    //   .then((res) => {
-    //     const members = chatDetails?.data?.chat?.members.map((i) => i._id)
-    //     if (res?.data?.isSlangReplaced) {
-    //       toast('Slang word detected. Message has been replaced', {
-    //         icon: '🚫',
-    //       })
-    //       socket.emit(NEW_MESSAGE, {
-    //         message: res.data.message,
-    //         members,
-    //         chatId,
-    //       })
-    //     } else {
-    //       socket.emit(NEW_MESSAGE, {
-    //         message,
-    //         members,
-    //         chatId,
-    //       })
-    //     }
-    // })
-    //   .catch((err) => {
-    //     setIsHateSpeech(true)
-    //     toast.error(err?.response?.data?.message)
-    //   })
+    axios
+      .post(`${FLASK_SERVER}/api/v2/process-message`, { message: message })
+      .then((res) => {
+        const members = chatDetails?.data?.chat?.members.map((i) => i._id)
+        if (res?.data?.needsReplacement) {
+          toast('Slang word detected. Message has been replaced', {
+            icon: '🚫',
+          })
+          socket.emit(NEW_MESSAGE, {
+            message: res.data.message,
+            members,
+            chatId,
+          })
+        } else {
+          socket.emit(NEW_MESSAGE, {
+            message,
+            members,
+            chatId,
+          })
+        }
+      })
+      .catch((err) => {
+        setIsHateSpeech(true)
+        toast.error(err?.response?.data?.message)
+      })
 
     setMessage('')
   }
